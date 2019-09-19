@@ -1,8 +1,7 @@
 package org.luncert.objectmocker.core;
 
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomUtils;
-import org.luncert.objectmocker.exception.GeneratorException;
+import static org.luncert.objectmocker.core.ObjectMockContext.BUILTIN_GENERATORS;
+import static org.luncert.objectmocker.core.ObjectMockContext.DEFAULT_LIST_SIZE;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -10,10 +9,24 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.security.InvalidParameterException;
-import java.util.*;
-import static org.luncert.objectmocker.core.ObjectMockContext.BUILTIN_GENERATORS;
-import static org.luncert.objectmocker.core.ObjectMockContext.DEFAULT_LIST_SIZE;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
+import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.lang3.RandomUtils;
+import org.luncert.objectmocker.exception.GeneratorException;
+
+/**
+ * @author Luncert
+ */
 @Slf4j
 public final class ObjectGenerator implements Serializable, IObjectMockContextAware {
 
@@ -23,7 +36,19 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
   private Set<String> ignores = new HashSet<>();
   private Map<Field, AbstractGenerator> fieldGenerators = new HashMap<>();
 
-  private ObjectGenerator() {}
+  private ObjectGenerator() {
+  }
+
+  private ObjectGenerator(Class<?> clazz, Set<String> ignores,
+                          Map<Field, AbstractGenerator> fieldGenerators) {
+    this.clazz = clazz;
+    this.ignores.addAll(ignores);
+    this.fieldGenerators.putAll(fieldGenerators);
+  }
+
+  ObjectGenerator copy() {
+    return new ObjectGenerator(this.clazz, this.ignores, this.fieldGenerators);
+  }
 
   /**
    * If this method was invoked, that means this ObjectGenerator has finished building.
@@ -34,7 +59,7 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
   public void setObjectMockContext(ObjectMockContext context) {
     this.context = context;
     fieldGenerators.values().forEach(
-          generator -> generator.setObjectMockContext(context));
+        generator -> generator.setObjectMockContext(context));
   }
 
   Class<?> getTargetClass() {
@@ -45,7 +70,7 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
    * Add ignores.
    * @param ignores string array of fields need be ignored.
    */
-  public void addIgnores(String ...ignores) {
+  public void addIgnores(String...ignores) {
     this.ignores.addAll(Arrays.asList(ignores));
   }
 
@@ -53,7 +78,7 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
    * Remove ignores.
    * @param ignores string array of fields need be removed from ignores.
    */
-  public void removeIgnores(String ...ignores) {
+  public void removeIgnores(String...ignores) {
     this.ignores.removeAll(Arrays.asList(ignores));
   }
 
@@ -87,7 +112,8 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
    * @param fieldGenerator customized generator, must be implementation of {@link AbstractGenerator}
    * @throws NoSuchFieldException throw exception if couldn't find target field
    */
-  public void setGenerator(String fieldName, AbstractGenerator fieldGenerator) throws NoSuchFieldException {
+  public void setGenerator(String fieldName, AbstractGenerator fieldGenerator)
+      throws NoSuchFieldException {
     Objects.requireNonNull(fieldGenerator);
     fieldGenerator.setObjectMockContext(this.context);
     fieldGenerators.put(resolveField(fieldName), fieldGenerator);
@@ -109,7 +135,7 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
    * @return target object
    */
   @SuppressWarnings("unchecked")
-  Object generate(String ...tmpIgnores) {
+  Object generate(String...tmpIgnores) {
     String className = clazz.getSimpleName();
 
     // try create new instance for target class
@@ -117,11 +143,12 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
     try {
       target = clazz.getConstructor().newInstance();
     } catch (Exception e) {
-      throw new GeneratorException("Failed to create a new instance of target class %s.", className);
+      throw new GeneratorException("Failed to create a new instance of target class %s.",
+          className);
     }
 
-    Set<String> tmpIgnoreSet = tmpIgnores.length == 0 ?
-        Collections.EMPTY_SET : new HashSet<>(Arrays.asList(tmpIgnores));
+    Set<String> tmpIgnoreSet = tmpIgnores.length == 0
+        ? Collections.EMPTY_SET : new HashSet<>(Arrays.asList(tmpIgnores));
 
     Class<?> objectClass = this.clazz;
     while (!Object.class.equals(objectClass)) {
@@ -133,8 +160,8 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
           // skip static or final field
           int modifiers = field.getModifiers();
           if (Modifier.isStatic(modifiers) || Modifier.isFinal(modifiers) || field.isSynthetic()) {
-            log.debug("{}.{} - Field has been skipped because it has static or final modifier, or generated by compiler.",
-                  className, fieldName);
+            log.debug("{}.{} - Field has been skipped because it has static or"
+                + " final modifier, or generated by compiler.", className, fieldName);
             continue;
           }
 
@@ -186,7 +213,8 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
     T[] enumValues = type.getEnumConstants();
     // cannot generate value with empty enum
     if (enumValues.length == 0) {
-      throw new GeneratorException("Couldn't generate a value with empty enum" + type.getSimpleName() + ".");
+      throw new GeneratorException("Couldn't generate a value with empty enum"
+          + type.getSimpleName() + ".");
     }
     return enumValues[RandomUtils.nextInt(0, enumValues.length)];
   }
@@ -257,7 +285,8 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
      * @throws Exception failed to set generator
      */
     @SuppressWarnings("unchecked")
-    public ObjectGeneratorBuilder setGenerator(String fieldName, ValueSupplier value) throws Exception {
+    public ObjectGeneratorBuilder setGenerator(String fieldName, ValueSupplier value)
+        throws Exception {
       Object v = value.get();
       setGenerator(fieldName, new AbstractGenerator((clx, clz) -> v) {});
       return this;
@@ -271,7 +300,8 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
      * @throws NoSuchFieldException throw exception if couldn't find target field
      */
     @SuppressWarnings("unchecked")
-    public ObjectGeneratorBuilder setGenerator(String fieldName, ObjectSupplier supplier) throws NoSuchFieldException {
+    public ObjectGeneratorBuilder setGenerator(String fieldName, ObjectSupplier supplier)
+        throws NoSuchFieldException {
       setGenerator(fieldName, new AbstractGenerator(supplier) {});
       return this;
     }
@@ -280,27 +310,32 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
      * Provide a generator for specified field.
      * Only available when builds ObjectGenerator.
      * @param fieldName field name of target class
-     * @param fieldGenerator customized generator, must be implementation of {@link AbstractGenerator}
+     * @param fieldGenerator customized generator, must be implementation
+     *                      of {@link AbstractGenerator}
      * @throws NoSuchFieldException throw exception if couldn't find target field
      */
-    public ObjectGeneratorBuilder setGenerator(String fieldName, AbstractGenerator fieldGenerator) throws NoSuchFieldException {
+    public ObjectGeneratorBuilder setGenerator(String fieldName, AbstractGenerator fieldGenerator)
+        throws NoSuchFieldException {
       Field field = ins.resolveField(fieldName);
       if (ins.fieldGenerators.containsKey(field)) {
-        throw new InvalidParameterException("One generator has been set for target field: " + fieldName +
-              ", you could only set a field generator for each field once when build ObjectGenerator.");
+        throw new InvalidParameterException("One generator has been set for target field: "
+            + fieldName + ", you could only set a field generator for each"
+            + " field once when build ObjectGenerator.");
       }
       ins.fieldGenerators.put(field, fieldGenerator);
       return this;
     }
 
     /**
-     * Extend a basic ObjectGenerator, including ObjectMockContext, ignores and part of field generators.
+     * Extend a basic ObjectGenerator, including ObjectMockContext,
+     * ignores and part of field generators.
      * @param basicGenerator basic ObjectGenerator
-     * @return ObjectGeneratorBuilder
+     * @return ObjectGenerator
      */
-    public ObjectGeneratorBuilder extend(final ObjectGenerator basicGenerator) {
+    public ObjectGenerator extend(final ObjectGenerator basicGenerator) {
       if (!ins.clazz.equals(basicGenerator.clazz)) {
-        throw new GeneratorException("Extended ObjectGenerator should has the same target class as the basic ObjectGenerator.");
+        throw new GeneratorException("Extended ObjectGenerator should"
+            + " has the same target class as the basic ObjectGenerator.");
       }
       ins.context = basicGenerator.context;
       ins.ignores.addAll(basicGenerator.ignores);
@@ -309,7 +344,7 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
           ins.fieldGenerators.put(entry.getKey(), entry.getValue());
         }
       }
-      return this;
+      return ins;
     }
 
     public ObjectGenerator build() {

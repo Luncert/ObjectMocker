@@ -1,23 +1,27 @@
-package org.luncert.objectmocker.builtinGenerator;
+package org.luncert.objectmocker.builtingenerator;
+
+import java.math.BigDecimal;
 
 import org.apache.commons.lang3.RandomUtils;
 import org.luncert.objectmocker.core.AbstractGenerator;
 import org.luncert.objectmocker.core.ObjectSupplier;
 
-import java.math.BigDecimal;
-
-public class BigDecimalGenerator extends AbstractGenerator<BigDecimal> {
+/**
+ * Generator for {@link java.math.BigDecimal}.
+ * @author Luncert
+ */
+class BigDecimalGenerator extends AbstractGenerator<BigDecimal> {
 
   private BigDecimalGenerator(ObjectSupplier<BigDecimal> supplier) {
     super(supplier);
   }
 
-  public static BigDecimalGenerator defaultValue(Double defaultValue) {
+  static BigDecimalGenerator defaultValue(Double defaultValue) {
     return new BigDecimalGenerator(
         (ctx, clz) -> BigDecimal.valueOf(defaultValue));
   }
 
-  public static BigDecimalGenerator rangeFrom(Double start, Double end) {
+  static BigDecimalGenerator rangeFrom(Double start, Double end) {
     return new BigDecimalGenerator(
         (ctx, clz) -> BigDecimal.valueOf(RandomUtils.nextDouble(start, end)));
   }

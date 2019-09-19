@@ -1,11 +1,11 @@
-package org.luncert.objectmocker.builtinGenerator;
+package org.luncert.objectmocker.builtingenerator;
+
+import java.util.Date;
 
 import org.luncert.objectmocker.core.AbstractGenerator;
 import org.luncert.objectmocker.core.ObjectSupplier;
 
-import java.util.Date;
-
-public class DateGenerator extends AbstractGenerator<Date> {
+class DateGenerator extends AbstractGenerator<Date> {
 
   private static DateGenerator instance;
 
@@ -13,7 +13,7 @@ public class DateGenerator extends AbstractGenerator<Date> {
     super(supplier);
   }
 
-  public static DateGenerator singleton() {
+  static DateGenerator singleton() {
     if (instance == null) {
       instance = new DateGenerator((ctx, clz) -> new Date());
     }

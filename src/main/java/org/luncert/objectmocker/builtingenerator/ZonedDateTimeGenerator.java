@@ -1,11 +1,11 @@
-package org.luncert.objectmocker.builtinGenerator;
+package org.luncert.objectmocker.builtingenerator;
+
+import java.time.ZonedDateTime;
 
 import org.luncert.objectmocker.core.AbstractGenerator;
 import org.luncert.objectmocker.core.ObjectSupplier;
 
-import java.time.ZonedDateTime;
-
-public class ZonedDateTimeGenerator extends AbstractGenerator<ZonedDateTime> {
+class ZonedDateTimeGenerator extends AbstractGenerator<ZonedDateTime> {
 
   private static ZonedDateTimeGenerator instance;
 
@@ -13,7 +13,7 @@ public class ZonedDateTimeGenerator extends AbstractGenerator<ZonedDateTime> {
     super(supplier);
   }
 
-  public static ZonedDateTimeGenerator singleton() {
+  static ZonedDateTimeGenerator singleton() {
     if (instance == null) {
       instance = new ZonedDateTimeGenerator((ctx, clz) -> ZonedDateTime.now());
     }

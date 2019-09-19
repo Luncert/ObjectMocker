@@ -1,4 +1,4 @@
-package org.luncert.objectmocker.builtinGenerator;
+package org.luncert.objectmocker.builtingenerator;
 
 import org.apache.commons.lang3.RandomUtils;
 import org.luncert.objectmocker.annotation.DynamicTypeGenerator;
@@ -7,20 +7,20 @@ import org.luncert.objectmocker.core.ObjectSupplier;
 import org.luncert.objectmocker.exception.GeneratorException;
 
 @DynamicTypeGenerator
-public class EnumGenerator extends AbstractGenerator<Object> {
+class EnumGenerator extends AbstractGenerator<Object> {
 
   private EnumGenerator(ObjectSupplier<Object> supplier) {
     super(supplier);
   }
 
-  public static <T> EnumGenerator defaultValue(T defaultValue) {
+  static <T> EnumGenerator defaultValue(T defaultValue) {
     checkObjectType(defaultValue.getClass());
     return new EnumGenerator((ctx, clz) -> defaultValue);
   }
 
-  public static <T> EnumGenerator rangeFrom(T[] rangeValue) {
+  static <T> EnumGenerator rangeFrom(T[] rangeValue) {
     if (rangeValue.length == 0) {
-      throw new GeneratorException("Parameter rangeValue must be a non-empty array.");
+      throw new IllegalArgumentException("Parameter rangeValue must be a non-empty array.");
     }
     checkObjectType(rangeValue[0].getClass());
 

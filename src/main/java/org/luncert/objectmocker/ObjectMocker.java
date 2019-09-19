@@ -3,9 +3,14 @@ package org.luncert.objectmocker;
 import org.luncert.objectmocker.core.ObjectGenerator;
 import org.luncert.objectmocker.core.ObjectMockContext;
 
+/**
+ * Use to build ObjectMockContext fast.
+ * @author Luncert
+ */
 public class ObjectMocker {
 
-  private ObjectMocker() {}
+  private ObjectMocker() {
+  }
 
   public static ObjectMockContextBuilder context() {
     return new ObjectMockContextBuilder();
@@ -14,7 +19,8 @@ public class ObjectMocker {
   public static class ObjectMockContextBuilder {
     private ObjectMockContext context = new ObjectMockContext();
 
-    private ObjectMockContextBuilder() {}
+    private ObjectMockContextBuilder() {
+    }
 
     /**
      * Register ObjectGenerator.
