@@ -7,6 +7,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.luncert.objectmocker.core.ObjectGenerator;
 import org.luncert.objectmocker.core.ObjectMockContext;
+import org.luncert.objectmocker.core.RealObjectMockContext;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
@@ -92,5 +93,22 @@ public class ObjectMockerTest {
     TestClass ins = context.generate(TestClass.class);
     UUID id = UUID.fromString(ins.getStringUuidField());
     Assert.assertNotNull(id);
+  }
+
+  @Test
+  public void createVirtualContext() throws Exception {
+    ObjectMockContext context = ObjectMocker.context()
+        .register(ObjectGenerator.builder(TestClass.class).build())
+        .create();
+
+    ObjectMockContext virtualCtx = context.createVirtualContext();
+    virtualCtx.modifyObjectGenerator(TestClass.class, generator ->
+        generator.addIgnores("stringUuidField"));
+
+    TestClass value = context.generate(TestClass.class);
+    Assert.assertNotNull(value.getStringUuidField());
+
+    value = virtualCtx.generate(TestClass.class);
+    Assert.assertNull(value.getStringUuidField());
   }
 }

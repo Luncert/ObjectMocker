@@ -1,7 +1,7 @@
 package org.luncert.objectmocker.core;
 
-import static org.luncert.objectmocker.core.ObjectMockContext.BUILTIN_GENERATORS;
-import static org.luncert.objectmocker.core.ObjectMockContext.DEFAULT_LIST_SIZE;
+import static org.luncert.objectmocker.core.RealObjectMockContext.BUILTIN_GENERATORS;
+import static org.luncert.objectmocker.core.RealObjectMockContext.DEFAULT_LIST_SIZE;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -36,10 +36,10 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
   private Set<String> ignores = new HashSet<>();
   private Map<Field, AbstractGenerator> fieldGenerators = new HashMap<>();
 
-  private ObjectGenerator() {
+  ObjectGenerator() {
   }
 
-  private ObjectGenerator(Class<?> clazz, Set<String> ignores,
+  ObjectGenerator(Class<?> clazz, Set<String> ignores,
                           Map<Field, AbstractGenerator> fieldGenerators) {
     this.clazz = clazz;
     this.ignores.addAll(ignores);
@@ -80,6 +80,10 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
    */
   public void removeIgnores(String...ignores) {
     this.ignores.removeAll(Arrays.asList(ignores));
+  }
+
+  Set<String> getIgnores() {
+    return ignores;
   }
 
   /**
@@ -127,6 +131,10 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
       field = clazz.getDeclaredField(fieldName);
     }
     return field;
+  }
+
+  Map<Field, AbstractGenerator> getFieldGenerators() {
+    return fieldGenerators;
   }
 
   /**

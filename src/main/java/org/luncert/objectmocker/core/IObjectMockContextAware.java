@@ -6,8 +6,8 @@ package org.luncert.objectmocker.core;
 public interface IObjectMockContextAware {
 
   /**
-   * used to obtain ObjectMockContext
-   * @param objectMockContext ObjectMockContext
+   * used to obtain RealObjectMockContext
+   * @param objectMockContext RealObjectMockContext
    */
   void setObjectMockContext(ObjectMockContext objectMockContext);
 }

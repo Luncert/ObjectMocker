@@ -113,7 +113,7 @@ public interface ObjectSupplier<T> {
 
   /**
    * generate an object.
-   * @param context ObjectMockContext
+   * @param context RealObjectMockContext
    * @param clazz target class
    * @return T
    */
@@ -256,3 +256,35 @@ public interface ObjectGeneratorModifier {
 ```
 
 ```accept```方法接收一个```ObjectGenerator```，然后你就可以在方法体对对象生成器进行修改了，实际上比```ObjectGeneratorExtender```还要简单些😂
+
+现在通过```copy```方法每个测试类都可以持有一个自己的context了，但是如果在测试方法间共享这个context，比如两个测试方法同时调用```context.modifyObjectGenerator```方法，结果肯定是测试失败，因为modify机制不像继承机制那样只在一次generate中起作用，它做的改动是永久的！为了解决这个问题，我引入了```VirtualObjectMockContext```
+
+你可以像这样创建一个虚拟的上下文：
+
+```java
+@RunWith(JUnit4.class)
+public class TestCaseA {
+	private ObjectMockContext globalContext = GlobalObjectMockContext.getInstance();
+    private ObjectMockContext caseContext = globalContext.copy();
+    
+    @Test
+    public void test1() {
+        ObjectMockContext virtualCtx = caseContext.createVirtualContext();
+        // modify and generate
+        // ...
+    }
+    
+    @Test
+    public void test2() {
+        ObjectMockContext virtualCtx = caseContext.createVirtualContext();
+        // modify and generate
+        // ...
+    }
+}
+
+```
+
+```createVirtualContext```方法看起来作用和```copy```一样，但实际上，```copy```会将原来的上下文的属性完全拷贝一份，而```createVirtualContext```不会，非常的轻量级！没有全拷贝！
+
+至此，ObjectMocker已经基本可用了😁。
+
