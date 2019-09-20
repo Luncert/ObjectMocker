@@ -1,6 +1,6 @@
 # ObjectMocker
 
-![](https://img.shields.io/badge/language-java-brightgreen.svg?style=plastic)![](https://img.shields.io/badge/build-passing-brightgreen)![](https://img.shields.io/badge/coverage-80%25-brightgreen)
+![](https://img.shields.io/badge/language-java-brightgreen.svg?style=plastic) ![](https://img.shields.io/badge/build-passing-brightgreen) ![](https://img.shields.io/badge/coverage-80%25-brightgreen)
 
 ## 用法
 
@@ -23,8 +23,8 @@ public class Person {
 ```java
 ObjectGenerator personGenerator = ObjectGenerator.builder(Person.class)
     .addIgnores("deprecatedField")
-    .setGenerator("uuid", (ctx, cls) -> UUID.randomUUID().toString())
-    .setGenerator("phoneList", BuiltinGeneratorBuilder.listGenerator(5))
+    .field("uuid", (ctx, cls) -> UUID.randomUUID().toString())
+    .field("phoneList", BuiltinGeneratorBuilder.listGenerator(5))
     .build();
 ```
 
@@ -41,19 +41,19 @@ ObjectGenerator personGenerator = ObjectGenerator.builder(Person.class)
 你也可以给这些内建生成器赋予特殊的配置，再绑定到```ObjectGenerator```的某个字段上，我提供了```BuiltinGeneratorBuilder```来帮助你完成这个任务，这个类包含了一些静态方法，每个都能传入配置项然后返回配置过的内建生成器，十分建议你使用静态导入来在你的代码中引入它：
 
 ```java
-import static org.luncert.objectmocker.builtingenerator.*;
+import static org.luncert.objectmocker.builtingenerator.BuiltinGeneratorBuilder.*;
 ```
 
 这样代码会更简洁。下面是```BuiltinGeneratorBuilder```的使用示例：
 
 ```java
 ObjectGenerator personGenerator = ObjectGenerator.builder(Person.class)
-    .setGenerator("phoneList", listGenerator(5))
-    .setGenerator("stringField", stringGenerator("Tom", "Joy", "Lucy")) // 从字符串数组里随机选择一个值输出
-    .setGenerator("stringId", stringGenerator("nil"))
-    .setGenerator("bigDecimalField", bigDecimalGenerator(-1.2d, 1000d)) // 生成处于-1.2~1000范围里的值
-    .setGenerator("booleanField", booleanGenerator())
-    .enumGenerator("enumField", enumGenertaor(Kinds.Student)) // 使用固定值作为枚举类型的输出
+    .field("phoneList", listGenerator(5))
+    .field("stringField", stringGenerator("Tom", "Joy", "Lucy")) // 从字符串数组里随机选择一个值输出
+    .field("stringId", stringGenerator("nil"))
+    .field("bigDecimalField", bigDecimalGenerator(-1.2d, 1000d)) // 生成处于-1.2~1000范围里的值
+    .field("booleanField", booleanGenerator())
+    .field("enumField", enumGenertaor(Kinds.Student)) // 使用固定值作为枚举类型的输出
     .build();
 ```
 
@@ -94,7 +94,7 @@ public class XxxTest {
 	public void testInvalidValue() {
 		ObjectMockContext ctx = ObjectMocker.context()
     		.register(ObjectGenerator.builder(Person.class)
-    			.setGenerator("businessId", (ctx, clz) ->
+    			.field("businessId", (ctx, clz) ->
                       "800" + RandomStringUtils.randomAlphabetic(9))
                  .build())
     		.create();
@@ -105,7 +105,7 @@ public class XxxTest {
 }
 ```
 
-聚焦于```setGenerator```处的lambda表达式上，这个lambda表达式实现了```org.luncert.objectmocker.core.ObjectSupplier```接口，这是一个函数式接口，定义十分简单：
+聚焦于```field```处的lambda表达式上，这个lambda表达式实现了```org.luncert.objectmocker.core.ObjectSupplier```接口，这是一个函数式接口，定义十分简单：
 
 ```java
 @FunctionalInterface
@@ -185,7 +185,7 @@ ObjectMockContext copiedCtx = GlobalObjectMockContext.copy();
 
     TestClass ins = context.generate(TestClass.class, basicGenerator ->
       ObjectGenerator.builder(TestClass.class)
-          .setGenerator("stringField", "Tom")
+          .field("stringField", () -> "Tom")
           .extend(basicGenerator)
     );
     Assert.assertEquals("Tom", ins.getStringField());
@@ -217,7 +217,7 @@ public interface ObjectGeneratorExtender {
 ```java
 basicGenerator ->
       ObjectGenerator.builder(TestClass.class)
-          .setGenerator("stringField", "Tom")
+          .field("stringField", () -> "Tom")
           .extend(basicGenerator)
 ```
 

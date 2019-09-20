@@ -66,7 +66,7 @@ public class ObjectMockerTest {
   public void extendRegisteredGenerator() throws NoSuchFieldException {
     ObjectMockContext context = ObjectMocker.context()
         .register(ObjectGenerator.builder(TestClass.class)
-            .setGenerator("enumField", enumGenerator(new TestEnum[]{TestEnum.B, TestEnum.C}))
+            .field("enumField", enumGenerator(new TestEnum[]{TestEnum.B, TestEnum.C}))
             .build())
         .create();
 
@@ -75,7 +75,7 @@ public class ObjectMockerTest {
 
     ins = context.generate(TestClass.class, basicGenerator ->
       ObjectGenerator.builder(TestClass.class)
-          .setGenerator("enumField", enumGenerator(TestEnum.A))
+          .field("enumField", enumGenerator(TestEnum.A))
           .extend(basicGenerator)
     );
     Assert.assertEquals(TestEnum.A, ins.getEnumField());
@@ -85,7 +85,7 @@ public class ObjectMockerTest {
   public void provideCustomizedGenerator() throws NoSuchFieldException {
     ObjectMockContext context = ObjectMocker.context()
         .register(ObjectGenerator.builder(TestClass.class)
-            .setGenerator("stringUuidField", (ctx, clz) -> UUID.randomUUID().toString())
+            .field("stringUuidField", (ctx, clz) -> UUID.randomUUID().toString())
             .build())
         .create();
 

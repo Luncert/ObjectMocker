@@ -285,11 +285,10 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
      * @throws Exception failed to set generator
      */
     @SuppressWarnings("unchecked")
-    public ObjectGeneratorBuilder setGenerator(String fieldName, ValueSupplier value)
+    public ObjectGeneratorBuilder field(String fieldName, ValueSupplier value)
         throws Exception {
       Object v = value.get();
-      setGenerator(fieldName, new AbstractGenerator((clx, clz) -> v) {});
-      return this;
+      return field(fieldName, new AbstractGenerator((clx, clz) -> v) {});
     }
 
     /**
@@ -300,10 +299,9 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
      * @throws NoSuchFieldException throw exception if couldn't find target field
      */
     @SuppressWarnings("unchecked")
-    public ObjectGeneratorBuilder setGenerator(String fieldName, ObjectSupplier supplier)
+    public ObjectGeneratorBuilder field(String fieldName, ObjectSupplier supplier)
         throws NoSuchFieldException {
-      setGenerator(fieldName, new AbstractGenerator(supplier) {});
-      return this;
+      return field(fieldName, new AbstractGenerator(supplier) {});
     }
 
     /**
@@ -314,7 +312,7 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
      *                      of {@link AbstractGenerator}
      * @throws NoSuchFieldException throw exception if couldn't find target field
      */
-    public ObjectGeneratorBuilder setGenerator(String fieldName, AbstractGenerator fieldGenerator)
+    public ObjectGeneratorBuilder field(String fieldName, AbstractGenerator fieldGenerator)
         throws NoSuchFieldException {
       Field field = ins.resolveField(fieldName);
       if (ins.fieldGenerators.containsKey(field)) {

@@ -6,7 +6,7 @@
 
   <groupId>org.luncert</groupId>
   <artifactId>objectmocker</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0.0</version>
 
   <name>objectmocker</name>
   <url>https://github.com/Luncert/ObjectMocker</url>
