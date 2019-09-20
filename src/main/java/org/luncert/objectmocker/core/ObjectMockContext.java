@@ -170,7 +170,12 @@ public class ObjectMockContext {
    */
   public void modifyObjectGenerator(Class<?> clazz, ObjectGeneratorModifier modifier)
       throws Exception {
-    modifier.accept(generators.get(clazz));
+    Objects.requireNonNull(clazz, "null-pointer parameter");
+    ObjectGenerator generator = generators.get(clazz);
+    if (generator == null) {
+      throw new GeneratorException("No ObjectGenerator registered for class %s.", clazz.getName());
+    }
+    modifier.accept(generator);
   }
 
   /**

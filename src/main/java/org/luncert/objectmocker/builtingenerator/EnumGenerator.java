@@ -14,7 +14,9 @@ class EnumGenerator extends AbstractGenerator<Object> {
   }
 
   static <T> EnumGenerator defaultValue(T defaultValue) {
-    checkObjectType(defaultValue.getClass());
+    if (defaultValue != null) {
+      checkObjectType(defaultValue.getClass());
+    }
     return new EnumGenerator((ctx, clz) -> defaultValue);
   }
 
