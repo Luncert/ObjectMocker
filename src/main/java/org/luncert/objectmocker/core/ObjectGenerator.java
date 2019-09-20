@@ -36,7 +36,8 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
   private Set<String> ignores = new HashSet<>();
   private Map<Field, AbstractGenerator> fieldGenerators = new HashMap<>();
 
-  ObjectGenerator() {
+  ObjectGenerator(Class<?> clazz) {
+    this.clazz = clazz;
   }
 
   ObjectGenerator(Class<?> clazz, Set<String> ignores,
@@ -118,6 +119,7 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
    */
   public void setGenerator(String fieldName, AbstractGenerator fieldGenerator)
       throws NoSuchFieldException {
+    Objects.requireNonNull(fieldName);
     Objects.requireNonNull(fieldGenerator);
     fieldGenerator.setObjectMockContext(this.context);
     fieldGenerators.put(resolveField(fieldName), fieldGenerator);
@@ -274,10 +276,10 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
    * Fast build ObjectGenerator with user provided configuration.
    */
   public static class ObjectGeneratorBuilder {
-    private ObjectGenerator ins = new ObjectGenerator();
+    private ObjectGenerator ins;
 
     private ObjectGeneratorBuilder(Class<?> clazz) {
-      ins.clazz = clazz;
+      ins = new ObjectGenerator(clazz);
     }
 
     public ObjectGeneratorBuilder addIgnores(String...ignores) {
@@ -322,6 +324,8 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
      */
     public ObjectGeneratorBuilder field(String fieldName, AbstractGenerator fieldGenerator)
         throws NoSuchFieldException {
+      Objects.requireNonNull(fieldName);
+      Objects.requireNonNull(fieldGenerator);
       Field field = ins.resolveField(fieldName);
       if (ins.fieldGenerators.containsKey(field)) {
         throw new InvalidParameterException("One generator has been set for target field: "

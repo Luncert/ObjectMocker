@@ -102,13 +102,17 @@ public class ObjectMockerTest {
         .create();
 
     ObjectMockContext virtualCtx = context.createVirtualContext();
-    virtualCtx.modifyObjectGenerator(TestClass.class, generator ->
-        generator.addIgnores("stringUuidField"));
+    virtualCtx.modifyObjectGenerator(TestClass.class, generator -> {
+      generator.addIgnores("shouldBeIgnored");
+      generator.setGenerator("stringUuidField", (ctx, clz) -> "X801EF");
+    });
 
     TestClass value = context.generate(TestClass.class);
-    Assert.assertNotNull(value.getStringUuidField());
+    Assert.assertNotNull(value.getShouldBeIgnored());
+    Assert.assertEquals(8, value.getStringUuidField().length());
 
     value = virtualCtx.generate(TestClass.class);
-    Assert.assertNull(value.getStringUuidField());
+    Assert.assertNull(value.getShouldBeIgnored());
+    Assert.assertEquals("X801EF", value.getStringUuidField());
   }
 }

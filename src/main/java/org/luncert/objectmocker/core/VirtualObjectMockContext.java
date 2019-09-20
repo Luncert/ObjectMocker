@@ -35,16 +35,15 @@ class VirtualObjectMockContext implements ObjectMockContext {
             mod.getIgnores(),
             mod.getFieldGenerators());
 
-        generator.setObjectMockContext(this);
-
         basicGenerator.getIgnores().forEach(generator::addIgnores);
-
         Map<Field, AbstractGenerator> fieldGenerators = generator.getFieldGenerators();
         for (Map.Entry<Field, AbstractGenerator> entry : basicGenerator.getFieldGenerators().entrySet()) {
           if (!fieldGenerators.containsKey(entry.getKey())) {
             fieldGenerators.put(entry.getKey(), entry.getValue());
           }
         }
+
+        generator.setObjectMockContext(this);
         return generator;
       });
     } else {
@@ -76,7 +75,7 @@ class VirtualObjectMockContext implements ObjectMockContext {
     }
     ObjectGenerator generator = modifications.get(clazz);
     if (generator == null) {
-      generator = new ObjectGenerator();
+      generator = new ObjectGenerator(clazz);
       modifications.put(clazz, generator);
     }
     modifier.accept(generator);
