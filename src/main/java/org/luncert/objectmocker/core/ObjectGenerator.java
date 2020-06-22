@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang3.RandomUtils;
@@ -57,34 +58,42 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
         //.put(ZonedDateTime.class, null)
         .build();
   }
-
-  private interface ValueParser {
-    Object parse(String raw);
-  }
-
+  
   private ObjectMockContext context;
-  private Class<?> clazz;
+  
+  // target type to generate
+  @Getter
+  private Class<?> targetType;
+  
+  // ignoring fields
   private Set<String> ignores = new HashSet<>();
+  
+  // specify field generators
   private Map<Field, AbstractGenerator> fieldGenerators = new HashMap<>();
 
   ObjectGenerator(Class<?> clazz) {
-    this.clazz = clazz;
+    this.targetType = clazz;
   }
 
   ObjectGenerator(Class<?> clazz, Set<String> ignores,
                           Map<Field, AbstractGenerator> fieldGenerators) {
-    this.clazz = clazz;
+    this.targetType = clazz;
     this.ignores.addAll(ignores);
     this.fieldGenerators.putAll(fieldGenerators);
   }
-
+  
+  /**
+   * Create new instance and copy all properties of this generator.
+   * Used by {@link RealObjectMockContext#copy()}
+   * @return new instance
+   */
   ObjectGenerator copy() {
-    return new ObjectGenerator(this.clazz, this.ignores, this.fieldGenerators);
+    return new ObjectGenerator(this.targetType, this.ignores, this.fieldGenerators);
   }
 
   /**
-   * If this method was invoked, that means this ObjectGenerator has finished building.
-   * and user shouldn't invoke it, all actions will be carried on with ObjectMockerContext.
+   * If this method is invoked, this ObjectGenerator must have completed building.
+   * User shouldn't invoke this method, all actions will be carried on with ObjectMockerContext.
    * @param context ObjectMockContext
    */
   @Override
@@ -92,10 +101,6 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
     this.context = context;
     fieldGenerators.values().forEach(
         generator -> generator.setObjectMockContext(context));
-  }
-
-  Class<?> getTargetClass() {
-    return clazz;
   }
 
   /**
@@ -131,7 +136,7 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
   }
 
   /**
-   * Provide a function-interface generator for specified field.
+   * Provide a generator in lambda expr for specified field.
    * @param fieldName field name of target class
    * @param supplier Lambda expression, implementation of {@link ObjectSupplier}
    * @throws NoSuchFieldException throw exception if couldn't find target field
@@ -142,10 +147,10 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
   }
 
   /**
-   * Instruct generator to use user provided generator for specified field.
-   * One field's generator could be overwrite if you set it second time.
+   * Provide a customizing generator generator for specified field.
+   * If there is another generator configured for specified field, it will be overwrite.
    * @param fieldName field name of target class
-   * @param fieldGenerator customized generator, must be implementation of {@link AbstractGenerator}
+   * @param fieldGenerator customized generator, must implement {@link AbstractGenerator}
    * @throws NoSuchFieldException throw exception if couldn't find target field
    */
   public void setGenerator(String fieldName, AbstractGenerator fieldGenerator)
@@ -159,9 +164,9 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
   private Field resolveField(String fieldName) throws NoSuchFieldException {
     Field field;
     try {
-      field = clazz.getField(fieldName);
+      field = targetType.getField(fieldName);
     } catch (NoSuchFieldException e) {
-      field = clazz.getDeclaredField(fieldName);
+      field = targetType.getDeclaredField(fieldName);
     }
     return field;
   }
@@ -177,36 +182,40 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
    */
   @SuppressWarnings("unchecked")
   Object generate(String...tmpIgnores) {
-    String className = clazz.getSimpleName();
+    String className = targetType.getSimpleName();
 
-    // try create new instance for target class
+    // try to create new instance for target class
+    
     Object target;
     try {
-      target = clazz.getConstructor().newInstance();
+      target = targetType.getConstructor().newInstance();
     } catch (Exception e) {
       throw new GeneratorException("Failed to create a new instance of target class %s.",
           className);
     }
 
+    // generate field values for new instance
+    
     Set<String> tmpIgnoreSet = tmpIgnores.length == 0
         ? Collections.EMPTY_SET : new HashSet<>(Arrays.asList(tmpIgnores));
 
-    Class<?> objectClass = this.clazz;
+    Class<?> objectClass = this.targetType;
+    // loop to scan all fields of target type, including its super classes.
     while (!Object.class.equals(objectClass)) {
       try {
         for (Field field : objectClass.getDeclaredFields()) {
           String fieldName = field.getName();
-          Class<?> fieldType = field.getType();
 
-          // skip static or final field
+          // skip static, final or jvm-generated fields
           int modifiers = field.getModifiers();
           if (Modifier.isStatic(modifiers) || Modifier.isFinal(modifiers) || field.isSynthetic()) {
-            log.debug("{}.{} - Field has been skipped because it has static or"
-                + " final modifier, or generated by compiler.", className, fieldName);
+            log.debug("{}.{} - Field has been skipped because it is static, final,"
+                + " or generated by compiler.", className, fieldName);
             continue;
           }
 
           // skip field need be ignored
+          // TODO: compress two hash value locating into one time.
           if (tmpIgnoreSet.contains(fieldName) || ignores.contains(fieldName)) {
             continue;
           }
@@ -217,13 +226,14 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
         }
       } catch (IllegalAccessException e) {
         throw new GeneratorException(e,
-              "Failed to set field value for instance of class %s.", className);
+              "Failed to set generated field value for instance of class %s.", className);
       }
 
       // turn to parent class
       objectClass = objectClass.getSuperclass();
     }
-    return clazz.cast(target);
+    
+    return targetType.cast(target);
   }
 
   /**
@@ -233,19 +243,20 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
    * @param config <pre>Map&lt;String, Object&gt;</pre>
    * @return target object
    */
+  @Deprecated
   Object generate(Map<String, Object> config) {
-    String className = clazz.getSimpleName();
+    String className = targetType.getSimpleName();
 
     // try create new instance for target class
     Object target;
     try {
-      target = clazz.getConstructor().newInstance();
+      target = targetType.getConstructor().newInstance();
     } catch (Exception e) {
       throw new GeneratorException("Failed to create a new instance of target class %s.",
           className);
     }
 
-    Class<?> objectClass = this.clazz;
+    Class<?> objectClass = this.targetType;
     while (!Object.class.equals(objectClass)) {
       try {
         for (Field field : objectClass.getDeclaredFields()) {
@@ -283,9 +294,10 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
       // turn to parent class
       objectClass = objectClass.getSuperclass();
     }
-    return clazz.cast(target);
+    return targetType.cast(target);
   }
 
+  @SuppressWarnings("unchecked")
   private Object generateField(Field field) {
     Class<?> fieldType = field.getType();
     // generate field value using fieldGenerator
@@ -392,11 +404,11 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
 
   /**
    * Get ObjectGeneratorBuilder.
-   * @param clazz target class
+   * @param targetType target class
    * @return ObjectGeneratorBuilder
    */
-  public static ObjectGeneratorBuilder builder(Class<?> clazz) {
-    return new ObjectGeneratorBuilder(clazz);
+  public static ObjectGeneratorBuilder builder(Class<?> targetType) {
+    return new ObjectGeneratorBuilder(targetType);
   }
 
   /**
@@ -470,7 +482,7 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
      * @return ObjectGenerator
      */
     public ObjectGenerator extend(final ObjectGenerator basicGenerator) {
-      if (!ins.clazz.equals(basicGenerator.clazz)) {
+      if (!ins.targetType.equals(basicGenerator.targetType)) {
         throw new GeneratorException("Extended ObjectGenerator should"
             + " has the same target class as the basic ObjectGenerator.");
       }

@@ -12,12 +12,7 @@ import static org.luncert.objectmocker.builtingenerator.BuiltinGeneratorBuilder.
 
 import com.google.common.collect.ImmutableMap;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.Date;
@@ -34,25 +29,25 @@ import org.luncert.objectmocker.exception.GeneratorException;
  */
 public final class RealObjectMockContext implements ObjectMockContext {
 
-  // Field AbstractGenerator Default Config
+  // default Config of field level generators.
 
   private static final int DEFAULT_STRING_LENGTH = 8;
   static final int DEFAULT_LIST_SIZE = 8;
 
   /**
-   * default Integer range.
+   * default Integer Type range.
    */
   private static final int INTEGER_START = 0;
   private static final int INTEGER_END = Integer.MAX_VALUE;
 
   /**
-   * default Long range.
+   * default Long Type range.
    */
   private static final long LONG_START = 0L;
   private static final long LONG_END = Long.MAX_VALUE;
 
   /**
-   * default Double range.
+   * default Double Type range.
    */
   private static final double DOUBLE_START = 0d;
   private static final double DOUBLE_END = Double.MAX_VALUE;
@@ -86,7 +81,7 @@ public final class RealObjectMockContext implements ObjectMockContext {
   @Override
   public void register(ObjectGenerator objectGenerator) {
     Objects.requireNonNull(objectGenerator);
-    Class<?> targetClazz = objectGenerator.getTargetClass();
+    Class<?> targetClazz = objectGenerator.getTargetType();
     if (generators.containsKey(targetClazz)) {
       throw new GeneratorException("One ObjectGenerator has been registered for target class: "
           + targetClazz.getName());
@@ -150,6 +145,7 @@ public final class RealObjectMockContext implements ObjectMockContext {
   }
 
   @Override
+  @Deprecated
   public <T> T generate(Class<T> clazz, Map<String, Object> baseData) throws IOException {
     ObjectGenerator generator = generators.get(clazz);
     if (generator != null) {
@@ -177,7 +173,7 @@ public final class RealObjectMockContext implements ObjectMockContext {
     for (Map.Entry<Class, ObjectGenerator> entry : this.generators.entrySet()) {
       ObjectGenerator generator = entry.getValue().copy();
       generator.setObjectMockContext(ctx);
-      ctx.generators.put(generator.getTargetClass(), generator);
+      ctx.generators.put(generator.getTargetType(), generator);
     }
     return ctx;
   }
