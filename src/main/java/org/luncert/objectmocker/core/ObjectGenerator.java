@@ -17,7 +17,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -132,7 +131,7 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
   @SuppressWarnings("unchecked")
   public void setGenerator(String fieldName, ValueSupplier value) throws Exception {
     Object v = value.get();
-    setGenerator(fieldName, new AbstractGenerator((clx, clz) -> v) {});
+    setGenerator(fieldName, new LambdaBasedGenerator((clx, clz) -> v));
   }
 
   /**
@@ -143,7 +142,7 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
    */
   @SuppressWarnings("unchecked")
   public void setGenerator(String fieldName, ObjectSupplier supplier) throws NoSuchFieldException {
-    setGenerator(fieldName, new AbstractGenerator(supplier) {});
+    setGenerator(fieldName, new LambdaBasedGenerator(supplier));
   }
 
   /**
@@ -341,7 +340,7 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
     public ObjectGeneratorBuilder field(String fieldName, ValueSupplier value)
         throws Exception {
       Object v = value.get();
-      return field(fieldName, new AbstractGenerator((clx, clz) -> v) {});
+      return field(fieldName, new LambdaBasedGenerator((clx, clz) -> v));
     }
 
     /**
@@ -354,7 +353,7 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
     @SuppressWarnings("unchecked")
     public ObjectGeneratorBuilder field(String fieldName, ObjectSupplier supplier)
         throws NoSuchFieldException {
-      return field(fieldName, new AbstractGenerator(supplier) {});
+      return field(fieldName, new LambdaBasedGenerator(supplier));
     }
 
     /**

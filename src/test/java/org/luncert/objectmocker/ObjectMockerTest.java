@@ -46,14 +46,14 @@ public class ObjectMockerTest {
   }
 
   @Test
-  public void copyContextAndModifyGenerator() throws Exception {
+  public void copyContextAndModifyGenerator() {
     ObjectMockContext context = ObjectMocker.context()
         .register(ObjectGenerator.builder(TestClass.class).build())
         .create();
 
     ObjectMockContext copiedCtx = context.copy();
-    copiedCtx.modifyObjectGenerator(TestClass.class, generator ->
-        generator.addIgnores("shouldBeIgnored"));
+    copiedCtx.getObjectGenerator(TestClass.class)
+        .ifPresent(generator -> generator.addIgnores("shouldBeIgnored"));
 
     TestClass ins = context.generate(TestClass.class);
     Assert.assertNotNull(ins.getShouldBeIgnored());
@@ -101,10 +101,11 @@ public class ObjectMockerTest {
         .create();
 
     ObjectMockContext virtualCtx = context.createVirtualContext();
-    virtualCtx.modifyObjectGenerator(TestClass.class, generator -> {
-      generator.addIgnores("shouldBeIgnored");
-      generator.setGenerator("stringUuidField", (ctx, clz) -> "X801EF");
-    });
+  
+    ObjectGenerator generator = virtualCtx.getObjectGenerator(TestClass.class)
+        .orElseThrow(NullPointerException::new);
+    generator.addIgnores("shouldBeIgnored");
+    generator.setGenerator("stringUuidField", (ctx, clz) -> "X801EF");
 
     TestClass value = context.generate(TestClass.class);
     Assert.assertNotNull(value.getShouldBeIgnored());

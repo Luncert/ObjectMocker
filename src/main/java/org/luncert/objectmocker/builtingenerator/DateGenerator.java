@@ -2,10 +2,10 @@ package org.luncert.objectmocker.builtingenerator;
 
 import java.util.Date;
 
-import org.luncert.objectmocker.core.AbstractGenerator;
+import org.luncert.objectmocker.core.LambdaBasedGenerator;
 import org.luncert.objectmocker.core.ObjectSupplier;
 
-class DateGenerator extends AbstractGenerator<Date> {
+class DateGenerator extends LambdaBasedGenerator<Date> {
 
   private static DateGenerator instance;
 

@@ -1,10 +1,10 @@
 package org.luncert.objectmocker.builtingenerator;
 
 import org.apache.commons.lang3.RandomUtils;
-import org.luncert.objectmocker.core.AbstractGenerator;
+import org.luncert.objectmocker.core.LambdaBasedGenerator;
 import org.luncert.objectmocker.core.ObjectSupplier;
 
-class IntegerGenerator extends AbstractGenerator<Integer> {
+class IntegerGenerator extends LambdaBasedGenerator<Integer> {
 
   private IntegerGenerator(ObjectSupplier<Integer> supplier) {
     super(supplier);

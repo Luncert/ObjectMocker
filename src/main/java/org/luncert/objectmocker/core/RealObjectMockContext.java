@@ -12,13 +12,13 @@ import static org.luncert.objectmocker.builtingenerator.BuiltinGeneratorBuilder.
 
 import com.google.common.collect.ImmutableMap;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.luncert.objectmocker.exception.GeneratorException;
@@ -130,11 +130,6 @@ public final class RealObjectMockContext implements ObjectMockContext {
   }
 
   @Override
-  public <T> T generate(ObjectSupplier<T> supplier) {
-    return generate(null, new AbstractGenerator<T>(supplier) {});
-  }
-
-  @Override
   public <T> T generate(Class<?> clazz, AbstractGenerator<T> generator) {
     if (clazz == null && generator.isDynamicTypeGenerator()) {
       throw new GeneratorException("Parameter clazz is mandatory"
@@ -145,14 +140,9 @@ public final class RealObjectMockContext implements ObjectMockContext {
   }
 
   @Override
-  public void modifyObjectGenerator(Class<?> clazz, ObjectGeneratorModifier modifier)
-      throws Exception {
-    Objects.requireNonNull(clazz, "null-pointer parameter");
-    ObjectGenerator generator = generators.get(clazz);
-    if (generator == null) {
-      throw new GeneratorException("No ObjectGenerator registered for class %s.", clazz.getName());
-    }
-    modifier.accept(generator);
+  public Optional<ObjectGenerator> getObjectGenerator(Class<?> targetClazz) {
+    Objects.requireNonNull(targetClazz, "null-pointer parameter");
+    return Optional.ofNullable(generators.get(targetClazz));
   }
 
   @Override

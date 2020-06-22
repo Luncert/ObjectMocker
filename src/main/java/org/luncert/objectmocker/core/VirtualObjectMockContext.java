@@ -1,10 +1,10 @@
 package org.luncert.objectmocker.core;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.luncert.objectmocker.exception.GeneratorException;
 
@@ -59,28 +59,20 @@ class VirtualObjectMockContext implements ObjectMockContext {
   }
 
   @Override
-  public <T> T generate(ObjectSupplier<T> supplier) {
-    return realContext.generate(supplier);
-  }
-
-  @Override
   public <T> T generate(Class<?> clazz, AbstractGenerator<T> generator) {
     return realContext.generate(clazz, generator);
   }
 
   @Override
-  public void modifyObjectGenerator(Class<?> clazz, ObjectGeneratorModifier modifier)
-      throws Exception {
-    Objects.requireNonNull(clazz);
-    if (!realContext.hasGeneratorFor(clazz)) {
-      throw new GeneratorException("No generator registered for class %s.", clazz.getName());
+  // TODO:
+  public Optional<ObjectGenerator> getObjectGenerator(Class<?> targetClazz) {
+    Objects.requireNonNull(targetClazz);
+    if (!realContext.hasGeneratorFor(targetClazz)) {
+      throw new GeneratorException("No generator registered for class %s.", targetClazz.getName());
     }
-    ObjectGenerator generator = modifications.get(clazz);
-    if (generator == null) {
-      generator = new ObjectGenerator(clazz);
-      modifications.put(clazz, generator);
-    }
-    modifier.accept(generator);
+
+    ObjectGenerator generator = modifications.get(targetClazz);
+    return Optional.ofNullable(generator);
   }
 
   /**
@@ -94,7 +86,6 @@ class VirtualObjectMockContext implements ObjectMockContext {
 
   @Override
   public ObjectMockContext createVirtualContext() {
-    throw new UnsupportedOperationException("Creating virtual context is unsupported "
-        + "in VirtualObjectMockContext.");
+    throw new UnsupportedOperationException("Invalid operation in VirtualObjectMockContext.");
   }
 }

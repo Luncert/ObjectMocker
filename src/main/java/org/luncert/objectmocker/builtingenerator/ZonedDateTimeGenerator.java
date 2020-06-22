@@ -2,10 +2,10 @@ package org.luncert.objectmocker.builtingenerator;
 
 import java.time.ZonedDateTime;
 
-import org.luncert.objectmocker.core.AbstractGenerator;
+import org.luncert.objectmocker.core.LambdaBasedGenerator;
 import org.luncert.objectmocker.core.ObjectSupplier;
 
-class ZonedDateTimeGenerator extends AbstractGenerator<ZonedDateTime> {
+class ZonedDateTimeGenerator extends LambdaBasedGenerator<ZonedDateTime> {
 
   private static ZonedDateTimeGenerator instance;
 

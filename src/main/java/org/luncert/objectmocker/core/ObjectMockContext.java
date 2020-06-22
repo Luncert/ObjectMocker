@@ -1,7 +1,6 @@
 package org.luncert.objectmocker.core;
 
-import java.io.IOException;
-import java.util.Map;
+import java.util.Optional;
 
 public interface ObjectMockContext {
 
@@ -38,13 +37,6 @@ public interface ObjectMockContext {
                         String...tmpIgnores);
 
   /**
-   * Generate enum, list, string and other basic type with user provided generator.
-   * @param supplier lambda implementation of ObjectSupplier
-   * @return generated object
-   */
-  <T> T generate(ObjectSupplier<T> supplier);
-
-  /**
    * Generate enum, list, string and other basic type with responsive generator.
    * e.g. {@code context.generate(ListGenerator.withLength(String.class, 10))}
    * @param clazz mandatory if generator has DynamicTypeGenerator annotation,
@@ -55,12 +47,9 @@ public interface ObjectMockContext {
   <T> T generate(Class<?> clazz, AbstractGenerator<T> generator);
 
   /**
-   * Get target class' ObjectGenerator to change generating strategy.
-   * @param clazz target class
-   * @param modifier ObjectGeneratorModifier
+   * Get target class' ObjectGenerator.
    */
-  void modifyObjectGenerator(Class<?> clazz, ObjectGeneratorModifier modifier)
-      throws Exception;
+  Optional<ObjectGenerator> getObjectGenerator(Class<?> targetClazz);
 
   /**
    * Create a new instance from this context.

@@ -4,7 +4,7 @@ package org.luncert.objectmocker.core;
  * Declare target generator is used for generate dynamic type, e.g. {@code List<String>;}.
  * @param <T> target type
  */
-public class DynamicTypeGenerator<T> extends AbstractGenerator<T> {
+public class DynamicTypeGenerator<T> extends LambdaBasedGenerator<T> {
   
   /**
    * Abstract parent class for all specified type generator.
