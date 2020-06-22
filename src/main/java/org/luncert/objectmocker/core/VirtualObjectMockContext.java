@@ -10,82 +10,99 @@ import org.luncert.objectmocker.exception.GeneratorException;
 
 class VirtualObjectMockContext implements ObjectMockContext {
 
-  private final Map<Class, ObjectGenerator> modifications = new HashMap<>();
-  private RealObjectMockContext realContext;
+  private ObjectMockContext parentContext;
 
-  VirtualObjectMockContext(RealObjectMockContext realContext) {
-    this.realContext = realContext;
+  private final Map<Class, ObjectGenerator> generators = new HashMap<>();
+
+  VirtualObjectMockContext(ObjectMockContext parentContext) {
+    this.parentContext = parentContext;
   }
 
   @Override
   public void register(ObjectGenerator objectGenerator) {
-
+    Objects.requireNonNull(objectGenerator);
+  
+    Class<?> targetClazz = objectGenerator.getTargetType();
+    if (isConfiguredClass(targetClazz)) {
+      throw new GeneratorException("Another ObjectGenerator has been registered for target class: "
+          + targetClazz.getName());
+    }
+  
+    objectGenerator.setObjectMockContext(this);
+    generators.put(targetClazz, objectGenerator);
   }
 
   @Override
-  public boolean hasGeneratorFor(Class<?> clazz) {
-    return realContext.hasGeneratorFor(clazz);
+  public boolean isConfiguredClass(Class<?> clazz) {
+    return generators.containsKey(clazz) || parentContext.isConfiguredClass(clazz);
   }
 
   @Override
   public <T> T generate(Class<T> clazz, String... tmpIgnores) {
-    ObjectGenerator mod = modifications.get(clazz);
-    if (mod != null) {
-      return realContext.generate(clazz, basicGenerator -> {
-        ObjectGenerator generator = new ObjectGenerator(clazz,
-            mod.getIgnores(),
-            mod.getFieldGenerators());
-
-        basicGenerator.getIgnores().forEach(generator::addIgnores);
-        Map<Field, AbstractGenerator> fieldGenerators = generator.getFieldGenerators();
-        for (Map.Entry<Field, AbstractGenerator> entry :
-            basicGenerator.getFieldGenerators().entrySet()) {
-          if (!fieldGenerators.containsKey(entry.getKey())) {
-            fieldGenerators.put(entry.getKey(), entry.getValue());
-          }
-        }
-
-        generator.setObjectMockContext(this);
-        return generator;
-      });
+    ObjectGenerator generator = generators.get(clazz);
+    if (generator != null) {
+      return clazz.cast(generator.generate(tmpIgnores));
+      //return parentContext.generate(clazz, basicGenerator -> {
+      //  ObjectGenerator generator = new ObjectGenerator(clazz,
+      //      mod.getIgnores(),
+      //      mod.getFieldGenerators());
+      //
+      //  basicGenerator.getIgnores().forEach(generator::addIgnores);
+      //  Map<Field, AbstractGenerator> fieldGenerators = generator.getFieldGenerators();
+      //  for (Map.Entry<Field, AbstractGenerator> entry :
+      //      basicGenerator.getFieldGenerators().entrySet()) {
+      //    if (!fieldGenerators.containsKey(entry.getKey())) {
+      //      fieldGenerators.put(entry.getKey(), entry.getValue());
+      //    }
+      //  }
+      //
+      //  generator.setObjectMockContext(this);
+      //  return generator;
+      //});
     } else {
-      return realContext.generate(clazz);
+      return parentContext.generate(clazz);
     }
   }
 
   @Override
   public <T> T generate(Class<T> clazz, ObjectGeneratorExtender extender, String... tmpIgnores) {
-    return realContext.generate(clazz, extender, tmpIgnores);
+    ObjectGenerator generator = generators.get(clazz);
+    
+    if (generator != null) {
+      try {
+        generator = extender.extendObjectGenerator(generator);
+      } catch (Exception e) {
+        throw new GeneratorException(e);
+      }
+      
+      return clazz.cast(generator.generate(tmpIgnores));
+    }
+    
+    return parentContext.generate(clazz, extender, tmpIgnores);
   }
 
   @Override
-  public <T> T generate(Class<?> clazz, AbstractGenerator<T> generator) {
-    return realContext.generate(clazz, generator);
-  }
-
-  @Override
-  // TODO:
   public Optional<ObjectGenerator> getObjectGenerator(Class<?> targetClazz) {
     Objects.requireNonNull(targetClazz);
-    if (!realContext.hasGeneratorFor(targetClazz)) {
-      throw new GeneratorException("No generator registered for class %s.", targetClazz.getName());
+    
+    ObjectGenerator generator = generators.get(targetClazz);
+    if (generator != null) {
+      return Optional.of(generator);
     }
-
-    ObjectGenerator generator = modifications.get(targetClazz);
-    return Optional.ofNullable(generator);
-  }
-
-  /**
-   * VirtualObjectMockContext doesn't support copy operation.
-   * @return new instance
-   */
-  @Override
-  public ObjectMockContext copy() {
-    throw new UnsupportedOperationException("Copying is unsupported on VirtualObjectMockContext.");
+    
+    Optional<ObjectGenerator> optional = parentContext.getObjectGenerator(targetClazz);
+    if (optional.isPresent()) {
+      generator = optional.get();
+      generator = new ObjectGeneratorProxy(generator);
+      generators.put(targetClazz, generator);
+      return Optional.of(generator);
+    }
+    
+    return Optional.empty();
   }
 
   @Override
-  public ObjectMockContext createVirtualContext() {
-    throw new UnsupportedOperationException("Invalid operation in VirtualObjectMockContext.");
+  public ObjectMockContext createChildContext() {
+    return new VirtualObjectMockContext(this);
   }
 }

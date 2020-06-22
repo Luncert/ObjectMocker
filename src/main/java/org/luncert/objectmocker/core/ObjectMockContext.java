@@ -1,5 +1,8 @@
 package org.luncert.objectmocker.core;
 
+import org.luncert.objectmocker.exception.GeneratorException;
+
+import java.lang.reflect.TypeVariable;
 import java.util.Optional;
 
 public interface ObjectMockContext {
@@ -16,7 +19,7 @@ public interface ObjectMockContext {
    * @param clazz target class.
    * @return boolean
    */
-  boolean hasGeneratorFor(Class<?> clazz);
+  boolean isConfiguredClass(Class<?> clazz);
 
   /**
    * Only used to generate customized class (not enum, not interface).
@@ -35,16 +38,40 @@ public interface ObjectMockContext {
    */
   <T> T generate(Class<T> clazz, ObjectGeneratorExtender extender,
                         String...tmpIgnores);
+  
+  /**
+   * Generate in pre-configured context.
+   * e.g. {@code context.generate(StringGenerator.withLength(10))}
+   * @param generator any implementation of {@link AbstractGenerator}
+   * @return generated object
+   */
+  default <T> T generate(AbstractGenerator<T> generator) {
+    if (generator.isDynamicTypeGenerator()) {
+      throw new GeneratorException("generator must be not DynamicTypeGenerator");
+    }
+  
+    return generator.generate(null);
+  }
 
   /**
    * Generate enum, list, string and other basic type with responsive generator.
    * e.g. {@code context.generate(ListGenerator.withLength(String.class, 10))}
-   * @param clazz mandatory if generator has DynamicTypeGenerator annotation,
-   *             otherwise it is optional
    * @param generator any implementation of {@link AbstractGenerator}
+   * @param elementType type of element
    * @return generated object
    */
-  <T> T generate(Class<?> clazz, AbstractGenerator<T> generator);
+  default <T> T generate(AbstractGenerator<T> generator, Class<?> elementType) {
+    if (!generator.isDynamicTypeGenerator()) {
+      throw new GeneratorException("generator must be extended from DynamicTypeGenerator");
+    }
+    
+    if (elementType == null) {
+      throw new GeneratorException("element type is mandatory");
+    }
+    
+    generator.setObjectMockContext(this);
+    return generator.generate(elementType);
+  }
 
   /**
    * Get target class' ObjectGenerator.
@@ -52,16 +79,9 @@ public interface ObjectMockContext {
   Optional<ObjectGenerator> getObjectGenerator(Class<?> targetClazz);
 
   /**
-   * Create a new instance from this context.
-   * All generator relating information will be copy into new instance.
-   * @return ObjectMockContext new instance.
+   * Create and return a child context,
+   * all modification on child context won't affect the parent context.
+   * @return child context, an extension class of RealObjectMockContext.
    */
-  ObjectMockContext copy();
-
-  /**
-   * Create and return a VirtualObjectMockContext,
-   * all modification on VirtualObjectMockContext won't affect the real RealObjectMockContext.
-   * @return VirtualObjectMockContext, an extension class of RealObjectMockContext.
-   */
-  ObjectMockContext createVirtualContext();
+  ObjectMockContext createChildContext();
 }

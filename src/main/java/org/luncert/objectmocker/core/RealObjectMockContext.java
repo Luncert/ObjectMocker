@@ -81,17 +81,19 @@ public final class RealObjectMockContext implements ObjectMockContext {
   @Override
   public void register(ObjectGenerator objectGenerator) {
     Objects.requireNonNull(objectGenerator);
+    
     Class<?> targetClazz = objectGenerator.getTargetType();
     if (generators.containsKey(targetClazz)) {
       throw new GeneratorException("One ObjectGenerator has been registered for target class: "
           + targetClazz.getName());
     }
+    
     objectGenerator.setObjectMockContext(this);
     generators.put(targetClazz, objectGenerator);
   }
 
   @Override
-  public boolean hasGeneratorFor(Class<?> clazz) {
+  public boolean isConfiguredClass(Class<?> clazz) {
     return generators.containsKey(clazz);
   }
 
@@ -121,6 +123,7 @@ public final class RealObjectMockContext implements ObjectMockContext {
       throw new GeneratorException("No basic generator registered for class "
           + clazz.getSimpleName());
     }
+    
     try {
       generator = extender.extendObjectGenerator(generator);
     } catch (Exception e) {
@@ -130,34 +133,13 @@ public final class RealObjectMockContext implements ObjectMockContext {
   }
 
   @Override
-  public <T> T generate(Class<?> clazz, AbstractGenerator<T> generator) {
-    if (clazz == null && generator.isDynamicTypeGenerator()) {
-      throw new GeneratorException("Parameter clazz is mandatory"
-          + " when generator has @DynamicTypeGenerator annotation.");
-    }
-    generator.setObjectMockContext(this);
-    return generator.generate(clazz);
-  }
-
-  @Override
   public Optional<ObjectGenerator> getObjectGenerator(Class<?> targetClazz) {
     Objects.requireNonNull(targetClazz, "null-pointer parameter");
     return Optional.ofNullable(generators.get(targetClazz));
   }
 
   @Override
-  public ObjectMockContext copy() {
-    RealObjectMockContext ctx = new RealObjectMockContext();
-    for (Map.Entry<Class, ObjectGenerator> entry : this.generators.entrySet()) {
-      ObjectGenerator generator = entry.getValue().copy();
-      generator.setObjectMockContext(ctx);
-      ctx.generators.put(generator.getTargetType(), generator);
-    }
-    return ctx;
-  }
-
-  @Override
-  public ObjectMockContext createVirtualContext() {
+  public ObjectMockContext createChildContext() {
     return new VirtualObjectMockContext(this);
   }
 

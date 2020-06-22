@@ -3,14 +3,11 @@ package org.luncert.objectmocker.core;
 import static org.luncert.objectmocker.core.RealObjectMockContext.BUILTIN_GENERATORS;
 import static org.luncert.objectmocker.core.RealObjectMockContext.DEFAULT_LIST_SIZE;
 
-import com.google.common.collect.ImmutableMap;
-
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.math.BigDecimal;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,29 +30,30 @@ import org.luncert.objectmocker.exception.GeneratorException;
  * @author Luncert
  */
 @Slf4j
-public final class ObjectGenerator implements Serializable, IObjectMockContextAware {
+public class ObjectGenerator implements Serializable, IObjectMockContextAware {
 
   private static final long serialVersionUID = 5287347012157068215L;
-
-  private static final Map<Class, ValueParser> VALUE_PARSERS;
-
-  static {
-    VALUE_PARSERS = ImmutableMap.<Class, ValueParser>builder()
-        .put(BigDecimal.class, BigDecimal::new)
-        .put(Boolean.class, Boolean::valueOf)
-        .put(boolean.class, Boolean::valueOf)
-        //.put(Date.class, null)
-        .put(Double.class, Double::valueOf)
-        .put(double.class, Double::valueOf)
-        .put(Integer.class, Integer::valueOf)
-        .put(int.class, Integer::valueOf)
-        .put(Long.class, Long::valueOf)
-        .put(long.class, Long::valueOf)
-        .put(String.class, v -> v)
-        .put(UUID.class, UUID::fromString)
-        //.put(ZonedDateTime.class, null)
-        .build();
-  }
+  
+  // TODO: as util
+  //private static final Map<Class, ValueParser> VALUE_PARSERS;
+  //
+  //static {
+  //  VALUE_PARSERS = ImmutableMap.<Class, ValueParser>builder()
+  //      .put(BigDecimal.class, BigDecimal::new)
+  //      .put(Boolean.class, Boolean::valueOf)
+  //      .put(boolean.class, Boolean::valueOf)
+  //      //.put(Date.class, null)
+  //      .put(Double.class, Double::valueOf)
+  //      .put(double.class, Double::valueOf)
+  //      .put(Integer.class, Integer::valueOf)
+  //      .put(int.class, Integer::valueOf)
+  //      .put(Long.class, Long::valueOf)
+  //      .put(long.class, Long::valueOf)
+  //      .put(String.class, v -> v)
+  //      .put(UUID.class, UUID::fromString)
+  //      //.put(ZonedDateTime.class, null)
+  //      .build();
+  //}
   
   private ObjectMockContext context;
   
@@ -79,15 +76,6 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
     this.targetType = clazz;
     this.ignores.addAll(ignores);
     this.fieldGenerators.putAll(fieldGenerators);
-  }
-  
-  /**
-   * Create new instance and copy all properties of this generator.
-   * Used by {@link RealObjectMockContext#copy()}
-   * @return new instance
-   */
-  ObjectGenerator copy() {
-    return new ObjectGenerator(this.targetType, this.ignores, this.fieldGenerators);
   }
 
   /**

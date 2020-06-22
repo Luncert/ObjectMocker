@@ -46,23 +46,6 @@ public class ObjectMockerTest {
   }
 
   @Test
-  public void copyContextAndModifyGenerator() {
-    ObjectMockContext context = ObjectMocker.context()
-        .register(ObjectGenerator.builder(TestClass.class).build())
-        .create();
-
-    ObjectMockContext copiedCtx = context.copy();
-    copiedCtx.getObjectGenerator(TestClass.class)
-        .ifPresent(generator -> generator.addIgnores("shouldBeIgnored"));
-
-    TestClass ins = context.generate(TestClass.class);
-    Assert.assertNotNull(ins.getShouldBeIgnored());
-
-    ins = copiedCtx.generate(TestClass.class);
-    Assert.assertNull(ins.getShouldBeIgnored());
-  }
-
-  @Test
   public void extendRegisteredGenerator() throws NoSuchFieldException {
     ObjectMockContext context = ObjectMocker.context()
         .register(ObjectGenerator.builder(TestClass.class)
@@ -100,18 +83,21 @@ public class ObjectMockerTest {
         .register(ObjectGenerator.builder(TestClass.class).build())
         .create();
 
-    ObjectMockContext virtualCtx = context.createVirtualContext();
+    ObjectMockContext childCtx = context.createChildContext();
   
-    ObjectGenerator generator = virtualCtx.getObjectGenerator(TestClass.class)
+    // perform modification on child context
+    ObjectGenerator generator = childCtx.getObjectGenerator(TestClass.class)
         .orElseThrow(NullPointerException::new);
     generator.addIgnores("shouldBeIgnored");
     generator.setGenerator("stringUuidField", (ctx, clz) -> "X801EF");
 
+    // generate data with parent context
     TestClass value = context.generate(TestClass.class);
     Assert.assertNotNull(value.getShouldBeIgnored());
     Assert.assertEquals(8, value.getStringUuidField().length());
 
-    value = virtualCtx.generate(TestClass.class);
+    // generate data with child context
+    value = childCtx.generate(TestClass.class);
     Assert.assertNull(value.getShouldBeIgnored());
     Assert.assertEquals("X801EF", value.getStringUuidField());
   }
