@@ -2,6 +2,8 @@ package org.luncert.objectmocker.core;
 
 import org.luncert.objectmocker.exception.GeneratorException;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -64,6 +66,11 @@ class VirtualObjectMockContext implements ObjectMockContext {
   @Override
   public <T> T generate(Class<?> clazz, AbstractGenerator<T> generator) {
     return realContext.generate(clazz, generator);
+  }
+
+  @Override
+  public <T> T generate(Class<T> clazz, Map<String, Object> baseData) throws IOException {
+    throw new UnsupportedOperationException("Not supported for now.");
   }
 
   @Override

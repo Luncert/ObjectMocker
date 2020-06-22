@@ -1,5 +1,9 @@
 package org.luncert.objectmocker.core;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+
 public interface ObjectMockContext {
 
   /**
@@ -50,6 +54,8 @@ public interface ObjectMockContext {
    * @return generated object
    */
   <T> T generate(Class<?> clazz, AbstractGenerator<T> generator);
+
+  <T> T generate(Class<T> clazz, Map<String, Object> baseData) throws IOException;
 
   /**
    * Get target class' ObjectGenerator to change generating strategy.

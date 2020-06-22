@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.luncert.objectmocker.core.AbstractGenerator;
+import org.luncert.objectmocker.exception.GeneratorException;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -28,10 +29,15 @@ public class EnumGeneratorTest {
     Object value = generator.generate(null);
     Assert.assertEquals(TestEnum.A, value);
   }
+  
+  @Test(expected = GeneratorException.class)
+  public void invalidDefaultValue() {
+    BuiltinGeneratorBuilder.enumGenerator("invalid");
+  }
 
   @Test
   public void rangeFrom() {
-    AbstractGenerator generator = BuiltinGeneratorBuilder.enumGenerator(TestEnum.values());
+    AbstractGenerator<?> generator = BuiltinGeneratorBuilder.enumGenerator(TestEnum.values());
     Object value = generator.generate(null);
     Assert.assertNotNull(value);
     Set<TestEnum> testEnums = new HashSet<>(Arrays.asList(TestEnum.values()));

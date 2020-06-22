@@ -12,6 +12,12 @@ import static org.luncert.objectmocker.builtingenerator.BuiltinGeneratorBuilder.
 
 import com.google.common.collect.ImmutableMap;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.Date;
@@ -57,21 +63,21 @@ public final class RealObjectMockContext implements ObjectMockContext {
     AbstractGenerator longGenerator = longGenerator(LONG_START, LONG_END);
     AbstractGenerator doubleGenerator = doubleGenerator(DOUBLE_START, DOUBLE_END);
     BUILTIN_GENERATORS = ImmutableMap
-          .<Class, AbstractGenerator>builder()
-          .put(BigDecimal.class, bigDecimalGenerator(DOUBLE_START, DOUBLE_END))
-          .put(Boolean.class, booleanGenerator())
-          .put(Date.class, dateGenerator())
-          .put(Double.class, doubleGenerator)
-          .put(double.class, doubleGenerator)
-          .put(Integer.class, integerGenerator)
-          .put(int.class, integerGenerator)
-          .put(Long.class, longGenerator)
-          .put(long.class, longGenerator)
-          .put(String.class, stringGenerator(DEFAULT_STRING_LENGTH))
-          .put(UUID.class, uuidGenerator())
-          .put(ZonedDateTime.class, zonedDateTimeGenerator())
-          .put(boolean.class, booleanGenerator())
-          .build();
+        .<Class, AbstractGenerator>builder()
+        .put(BigDecimal.class, bigDecimalGenerator(DOUBLE_START, DOUBLE_END))
+        .put(Boolean.class, booleanGenerator())
+        .put(boolean.class, booleanGenerator())
+        .put(Date.class, dateGenerator())
+        .put(Double.class, doubleGenerator)
+        .put(double.class, doubleGenerator)
+        .put(Integer.class, integerGenerator)
+        .put(int.class, integerGenerator)
+        .put(Long.class, longGenerator)
+        .put(long.class, longGenerator)
+        .put(String.class, stringGenerator(DEFAULT_STRING_LENGTH))
+        .put(UUID.class, uuidGenerator())
+        .put(ZonedDateTime.class, zonedDateTimeGenerator())
+        .build();
   }
 
   private final Map<Class, ObjectGenerator> generators = new HashMap<>();
@@ -140,6 +146,36 @@ public final class RealObjectMockContext implements ObjectMockContext {
     }
     generator.setObjectMockContext(this);
     return generator.generate(clazz);
+  }
+
+  @Override
+  public <T> T generate(Class<T> clazz, Map<String, Object> baseData) throws IOException {
+    ObjectGenerator generator = generators.get(clazz);
+    if (generator != null) {
+      return clazz.cast(generator.generate(baseData));
+    } else {
+      throw new GeneratorException("No generator registered for class %s.",
+          clazz.getSimpleName());
+    }
+  }
+
+
+  public byte[] read(InputStream inputStream) throws IOException {
+    byte[] bArray;
+    try (BufferedInputStream buffer = new BufferedInputStream(inputStream);
+        DataInputStream dataIn = new DataInputStream(buffer);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(bos)) {
+      byte[] buf = new byte[1024];
+      while (true) {
+        int len = dataIn.read(buf);
+        if (len < 0)
+          break;
+        dos.write(buf, 0, len);
+      }
+      bArray = bos.toByteArray();
+    }
+    return bArray;
   }
 
   @Override

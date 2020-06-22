@@ -25,4 +25,10 @@ public class DoubleGeneratorTest {
     Assert.assertTrue(value >= start);
     Assert.assertTrue(value < end);
   }
+  
+  @Test(expected = IllegalArgumentException.class)
+  public void givenInvalidRange() {
+    double start = 0d, end = 0d;
+    BuiltinGeneratorBuilder.doubleGenerator(start, end);
+  }
 }

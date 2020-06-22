@@ -25,3 +25,6 @@ hs_err_pid*
 *.iml
 .idea
 target/
+.classpath
+.factorypath
+.project
