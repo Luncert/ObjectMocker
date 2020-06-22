@@ -2,7 +2,6 @@ package org.luncert.objectmocker.core;
 
 import java.util.Objects;
 
-import org.luncert.objectmocker.annotation.DynamicTypeGenerator;
 import org.luncert.objectmocker.exception.GeneratorException;
 
 /**
@@ -14,7 +13,6 @@ public abstract class AbstractGenerator<T> implements IObjectMockContextAware {
 
   private ObjectMockContext context;
   private ObjectSupplier<T> supplier;
-  private boolean dynamicTypeGenerator;
 
   /**
    * Abstract parent class for all specified type generator.
@@ -23,8 +21,6 @@ public abstract class AbstractGenerator<T> implements IObjectMockContextAware {
   public AbstractGenerator(ObjectSupplier<T> supplier) {
     Objects.requireNonNull(supplier);
     this.supplier = supplier;
-
-    dynamicTypeGenerator = getClass().getAnnotation(DynamicTypeGenerator.class) != null;
   }
 
   @Override
@@ -42,6 +38,6 @@ public abstract class AbstractGenerator<T> implements IObjectMockContextAware {
   }
 
   boolean isDynamicTypeGenerator() {
-    return dynamicTypeGenerator;
+    return this instanceof DynamicTypeGenerator;
   }
 }

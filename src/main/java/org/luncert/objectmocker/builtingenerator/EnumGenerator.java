@@ -1,13 +1,11 @@
 package org.luncert.objectmocker.builtingenerator;
 
 import org.apache.commons.lang3.RandomUtils;
-import org.luncert.objectmocker.annotation.DynamicTypeGenerator;
-import org.luncert.objectmocker.core.AbstractGenerator;
+import org.luncert.objectmocker.core.DynamicTypeGenerator;
 import org.luncert.objectmocker.core.ObjectSupplier;
 import org.luncert.objectmocker.exception.GeneratorException;
 
-@DynamicTypeGenerator
-class EnumGenerator extends AbstractGenerator<Object> {
+class EnumGenerator extends DynamicTypeGenerator<Object> {
 
   private EnumGenerator(ObjectSupplier<Object> supplier) {
     super(supplier);

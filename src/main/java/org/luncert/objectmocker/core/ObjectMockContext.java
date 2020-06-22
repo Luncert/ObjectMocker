@@ -54,8 +54,6 @@ public interface ObjectMockContext {
    */
   <T> T generate(Class<?> clazz, AbstractGenerator<T> generator);
 
-  <T> T generate(Class<T> clazz, Map<String, Object> baseData) throws IOException;
-
   /**
    * Get target class' ObjectGenerator to change generating strategy.
    * @param clazz target class

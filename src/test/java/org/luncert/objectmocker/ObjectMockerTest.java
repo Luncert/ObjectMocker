@@ -1,6 +1,5 @@
 package org.luncert.objectmocker;
 
-import com.google.common.collect.ImmutableMap;
 import lombok.Data;
 import org.junit.Assert;
 import org.junit.Test;
@@ -9,16 +8,9 @@ import org.junit.runners.JUnit4;
 import org.luncert.objectmocker.core.ObjectGenerator;
 import org.luncert.objectmocker.core.ObjectMockContext;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.luncert.objectmocker.builtingenerator.BuiltinGeneratorBuilder.enumGenerator;
@@ -51,38 +43,6 @@ public class ObjectMockerTest {
           .register(ObjectGenerator.builder(TestClass.class).build())
           .create();
     context.generate(TestClass.class);
-  }
-
-  public static class LevelA {
-    private String name;
-    private String pos;
-    private List<LevelB> items;
-  }
-
-  public static class LevelB {
-    private int id;
-  }
-
-  @Test
-  public void mapConfiguredGenerating() throws IOException {
-    ObjectMockContext context = ObjectMocker.context()
-        .register(ObjectGenerator.builder(LevelA.class).build())
-        .register(ObjectGenerator.builder(LevelB.class).build())
-        .create();
-
-    Map<String, Object> config = new HashMap<>();
-    config.put("name", "ASD");
-    config.put("items", Arrays.asList(
-        ImmutableMap.builder().put("id", "1").build(),
-        ImmutableMap.builder().put("id", "2").build()
-    ));
-
-    LevelA ins = context.generate(LevelA.class, config);
-    Assert.assertEquals("ASD", ins.name);
-    Assert.assertNotNull(ins.pos);
-    Assert.assertEquals(2, ins.items.size());
-    Assert.assertEquals(1, ins.items.get(0).id);
-    Assert.assertEquals(2, ins.items.get(1).id);
   }
 
   @Test

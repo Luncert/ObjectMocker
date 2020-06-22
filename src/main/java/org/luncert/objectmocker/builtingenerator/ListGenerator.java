@@ -3,12 +3,10 @@ package org.luncert.objectmocker.builtingenerator;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.luncert.objectmocker.annotation.DynamicTypeGenerator;
-import org.luncert.objectmocker.core.AbstractGenerator;
+import org.luncert.objectmocker.core.DynamicTypeGenerator;
 import org.luncert.objectmocker.core.ObjectSupplier;
 
-@DynamicTypeGenerator
-class ListGenerator extends AbstractGenerator<List> {
+class ListGenerator extends DynamicTypeGenerator<List> {
 
   private ListGenerator(ObjectSupplier<List> supplier) {
     super(supplier);

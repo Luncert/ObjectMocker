@@ -69,11 +69,6 @@ class VirtualObjectMockContext implements ObjectMockContext {
   }
 
   @Override
-  public <T> T generate(Class<T> clazz, Map<String, Object> baseData) throws IOException {
-    throw new UnsupportedOperationException("Not supported for now.");
-  }
-
-  @Override
   public void modifyObjectGenerator(Class<?> clazz, ObjectGeneratorModifier modifier)
       throws Exception {
     Objects.requireNonNull(clazz);
@@ -90,7 +85,7 @@ class VirtualObjectMockContext implements ObjectMockContext {
 
   /**
    * VirtualObjectMockContext doesn't support copy operation.
-   * @return
+   * @return new instance
    */
   @Override
   public ObjectMockContext copy() {

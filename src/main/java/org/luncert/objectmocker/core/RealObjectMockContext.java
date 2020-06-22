@@ -145,18 +145,6 @@ public final class RealObjectMockContext implements ObjectMockContext {
   }
 
   @Override
-  @Deprecated
-  public <T> T generate(Class<T> clazz, Map<String, Object> baseData) throws IOException {
-    ObjectGenerator generator = generators.get(clazz);
-    if (generator != null) {
-      return clazz.cast(generator.generate(baseData));
-    } else {
-      throw new GeneratorException("No generator registered for class %s.",
-          clazz.getSimpleName());
-    }
-  }
-
-  @Override
   public void modifyObjectGenerator(Class<?> clazz, ObjectGeneratorModifier modifier)
       throws Exception {
     Objects.requireNonNull(clazz, "null-pointer parameter");
