@@ -20,7 +20,8 @@ class DoubleGenerator extends AbstractGenerator<Double> {
     }
     boolean overflow = end - start < 0;
     final double e1 = overflow ? Integer.MAX_VALUE : end - start;
-    // -Integer.MIN_VALUE is equals to Integer.MIN_VALUE, so I add 1 to e2 in case of e2 = Integer.MIN_VALUE
+    // -Integer.MIN_VALUE is equals to Integer.MIN_VALUE,
+    // so I add 1 to e2 in case of e2 = Integer.MIN_VALUE
     final double e2 = overflow ? -(start + 1) - (Integer.MAX_VALUE - end) : 0;
     return new DoubleGenerator(
         (ctx, clz) -> (RandomUtils.nextDouble(0, e1) + start + RandomUtils.nextDouble(0, e2)));

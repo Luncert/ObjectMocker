@@ -3,6 +3,8 @@ package org.luncert.objectmocker.core;
 import static org.luncert.objectmocker.core.RealObjectMockContext.BUILTIN_GENERATORS;
 import static org.luncert.objectmocker.core.RealObjectMockContext.DEFAULT_LIST_SIZE;
 
+import com.google.common.collect.ImmutableMap;
+
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -22,13 +24,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
-import com.google.common.collect.ImmutableMap;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang3.RandomUtils;
 import org.luncert.objectmocker.exception.GeneratorException;
 
 /**
+ * ObjectGenerator.
  * @author Luncert
  */
 @Slf4j
@@ -43,7 +45,7 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
         .put(BigDecimal.class, BigDecimal::new)
         .put(Boolean.class, Boolean::valueOf)
         .put(boolean.class, Boolean::valueOf)
-//        .put(Date.class, null)
+        //.put(Date.class, null)
         .put(Double.class, Double::valueOf)
         .put(double.class, Double::valueOf)
         .put(Integer.class, Integer::valueOf)
@@ -52,7 +54,7 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
         .put(long.class, Long::valueOf)
         .put(String.class, v -> v)
         .put(UUID.class, UUID::fromString)
-//        .put(ZonedDateTime.class, null)
+        //.put(ZonedDateTime.class, null)
         .build();
   }
 
@@ -228,7 +230,7 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
    * create a new instance based on json configure.
    * TODO: support control literal, like regexp.
    * TODO: provide config builder.
-   * @param config <pre>Map<String, Object></pre>
+   * @param config <pre>Map&lt;String, Object&gt;</pre>
    * @return target object
    */
   Object generate(Map<String, Object> config) {
@@ -365,13 +367,14 @@ public final class ObjectGenerator implements Serializable, IObjectMockContextAw
           Map item = (Map) tmp;
           ret.add(context.generate(elemClass, item));
         }
-      }
-      catch (Exception e) {
-        throw new GeneratorException("Invalid config data type %s, expect List or String.", raw.getClass().getName());
+      } catch (Exception e) {
+        throw new GeneratorException("Invalid config data type %s, expect List or String.",
+            raw.getClass().getName());
       }
       return ret;
     } else {
-      throw new GeneratorException("Invalid config data type %s, expect List or String.", raw.getClass().getName());
+      throw new GeneratorException("Invalid config data type %s, expect List or String.",
+          raw.getClass().getName());
     }
   }
 

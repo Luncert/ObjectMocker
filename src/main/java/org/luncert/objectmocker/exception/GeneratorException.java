@@ -1,6 +1,7 @@
 package org.luncert.objectmocker.exception;
 
 /**
+ * GeneratorException.
  * @author Luncert
  */
 public class GeneratorException extends RuntimeException {

@@ -1,13 +1,12 @@
 package org.luncert.objectmocker.core;
 
-import org.luncert.objectmocker.exception.GeneratorException;
-
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import org.luncert.objectmocker.exception.GeneratorException;
 
 class VirtualObjectMockContext implements ObjectMockContext {
 
@@ -39,7 +38,8 @@ class VirtualObjectMockContext implements ObjectMockContext {
 
         basicGenerator.getIgnores().forEach(generator::addIgnores);
         Map<Field, AbstractGenerator> fieldGenerators = generator.getFieldGenerators();
-        for (Map.Entry<Field, AbstractGenerator> entry : basicGenerator.getFieldGenerators().entrySet()) {
+        for (Map.Entry<Field, AbstractGenerator> entry :
+            basicGenerator.getFieldGenerators().entrySet()) {
           if (!fieldGenerators.containsKey(entry.getKey())) {
             fieldGenerators.put(entry.getKey(), entry.getValue());
           }
@@ -99,6 +99,7 @@ class VirtualObjectMockContext implements ObjectMockContext {
 
   @Override
   public ObjectMockContext createVirtualContext() {
-    throw new UnsupportedOperationException("Creating virtual context is unsupported on VirtualObjectMockContext.");
+    throw new UnsupportedOperationException("Creating virtual context is unsupported "
+        + "in VirtualObjectMockContext.");
   }
 }

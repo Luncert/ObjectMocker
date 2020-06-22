@@ -6,8 +6,9 @@ import org.luncert.objectmocker.annotation.DynamicTypeGenerator;
 import org.luncert.objectmocker.exception.GeneratorException;
 
 /**
+ * AbstractGenerator.
  * @author Luncert
- * @param <T>
+ * @param <T> target type for generation.
  */
 public abstract class AbstractGenerator<T> implements IObjectMockContextAware {
 

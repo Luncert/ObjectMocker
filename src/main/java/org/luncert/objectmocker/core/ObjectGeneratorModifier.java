@@ -1,13 +1,14 @@
 package org.luncert.objectmocker.core;
 
 /**
+ * Function interface using to modify registered ObjectGenerator.
  * @author Luncert
  */
 @FunctionalInterface
 public interface ObjectGeneratorModifier {
 
   /**
-   * modify ObjectGenerator
+   * Modify ObjectGenerator.
    * @param generator ObjectGenerator
    * @throws Exception java.lang.Exception
    */

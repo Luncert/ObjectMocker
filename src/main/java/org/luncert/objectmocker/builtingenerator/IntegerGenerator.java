@@ -20,7 +20,8 @@ class IntegerGenerator extends AbstractGenerator<Integer> {
     }
     boolean overflow = end - start < 0;
     final int e1 = overflow ? Integer.MAX_VALUE : end - start;
-    // -Integer.MIN_VALUE is equals to Integer.MIN_VALUE, so I add 1 to e2 in case of e2 = Integer.MIN_VALUE
+    // -Integer.MIN_VALUE is equals to Integer.MIN_VALUE,
+    // so I add 1 to e2 in case of e2 = Integer.MIN_VALUE
     final int e2 = overflow ? -(start + 1) - (Integer.MAX_VALUE - end) : 0;
     return new IntegerGenerator(
         (ctx, clz) -> (RandomUtils.nextInt(0, e1) + start + RandomUtils.nextInt(0, e2)));

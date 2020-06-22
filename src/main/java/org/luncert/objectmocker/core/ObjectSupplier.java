@@ -1,14 +1,15 @@
 package org.luncert.objectmocker.core;
 
 /**
+ * Function interface using to provide instance for customizing generator.
  * @author Luncert
- * @param <T>
+ * @param <T> instance type
  */
 @FunctionalInterface
 public interface ObjectSupplier<T> {
 
   /**
-   * generate an object.
+   * Generate an object.
    * @param context ObjectMockContext
    * @param clazz target class
    * @return T

@@ -29,6 +29,7 @@ import java.util.UUID;
 import org.luncert.objectmocker.exception.GeneratorException;
 
 /**
+ * RealObjectMockContext.
  * @author Luncert
  */
 public final class RealObjectMockContext implements ObjectMockContext {
@@ -157,25 +158,6 @@ public final class RealObjectMockContext implements ObjectMockContext {
       throw new GeneratorException("No generator registered for class %s.",
           clazz.getSimpleName());
     }
-  }
-
-
-  public byte[] read(InputStream inputStream) throws IOException {
-    byte[] bArray;
-    try (BufferedInputStream buffer = new BufferedInputStream(inputStream);
-        DataInputStream dataIn = new DataInputStream(buffer);
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(bos)) {
-      byte[] buf = new byte[1024];
-      while (true) {
-        int len = dataIn.read(buf);
-        if (len < 0)
-          break;
-        dos.write(buf, 0, len);
-      }
-      bArray = bos.toByteArray();
-    }
-    return bArray;
   }
 
   @Override

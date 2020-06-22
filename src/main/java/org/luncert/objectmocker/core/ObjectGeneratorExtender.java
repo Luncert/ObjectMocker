@@ -1,6 +1,7 @@
 package org.luncert.objectmocker.core;
 
 /**
+ * Function interface using to extend registered ObjectGenerator.
  * @author Luncert
  */
 @FunctionalInterface
