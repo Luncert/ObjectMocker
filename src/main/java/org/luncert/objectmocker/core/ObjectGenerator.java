@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang3.RandomUtils;
 import org.luncert.objectmocker.exception.GeneratorException;
+import org.luncert.objectmocker.util.ReflectionUtils;
 
 /**
  * ObjectGenerator.
@@ -55,17 +56,17 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
   //      .build();
   //}
   
-  private ObjectMockContext context;
+  protected ObjectMockContext context;
   
   // target type to generate
   @Getter
-  private Class<?> targetType;
+  private final Class<?> targetType;
   
   // ignoring fields
-  private Set<String> ignores = new HashSet<>();
+  Set<String> ignores = new HashSet<>();
   
   // specify field generators
-  private Map<Field, AbstractGenerator> fieldGenerators = new HashMap<>();
+  Map<Field, AbstractGenerator> fieldGenerators = new HashMap<>();
 
   ObjectGenerator(Class<?> clazz) {
     this.targetType = clazz;
@@ -97,6 +98,10 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
   public void addIgnores(String...ignores) {
     this.ignores.addAll(Arrays.asList(ignores));
   }
+  
+  public boolean hasIgnore(String ignore) {
+    return ignores.contains(ignore);
+  }
 
   /**
    * Remove ignores.
@@ -105,9 +110,13 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
   public void removeIgnores(String...ignores) {
     this.ignores.removeAll(Arrays.asList(ignores));
   }
-
+  
+  /**
+   * Get a set copied from the original ignoring set.
+   * @return copied ignoring set
+   */
   Set<String> getIgnores() {
-    return ignores;
+    return new HashSet<>(ignores);
   }
 
   /**
@@ -145,21 +154,8 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
     Objects.requireNonNull(fieldName);
     Objects.requireNonNull(fieldGenerator);
     fieldGenerator.setObjectMockContext(this.context);
-    fieldGenerators.put(resolveField(fieldName), fieldGenerator);
-  }
-
-  private Field resolveField(String fieldName) throws NoSuchFieldException {
-    Field field;
-    try {
-      field = targetType.getField(fieldName);
-    } catch (NoSuchFieldException e) {
-      field = targetType.getDeclaredField(fieldName);
-    }
-    return field;
-  }
-
-  Map<Field, AbstractGenerator> getFieldGenerators() {
-    return fieldGenerators;
+    fieldGenerators.put(ReflectionUtils.getField(targetType, fieldName),
+        fieldGenerator);
   }
 
   /**
@@ -177,7 +173,7 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
     try {
       target = targetType.getConstructor().newInstance();
     } catch (Exception e) {
-      throw new GeneratorException("Failed to create a new instance of target class %s.",
+      throw new GeneratorException(e, "Failed to create a new instance of target class %s.",
           className);
     }
 
@@ -202,14 +198,11 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
           }
 
           // skip field need be ignored
-          // TODO: compress two hash value locating into one time.
-          if (tmpIgnoreSet.contains(fieldName) || ignores.contains(fieldName)) {
-            continue;
+          if (!tmpIgnoreSet.contains(fieldName) && !hasIgnore(fieldName)) {
+            // To set value for field, we need set it accessible at first
+            field.setAccessible(true);
+            field.set(target, generateField(field));
           }
-
-          // To set value for field, we need set it accessible at first
-          field.setAccessible(true);
-          field.set(target, generateField(field));
         }
       } catch (IllegalAccessException e) {
         throw new GeneratorException(e,
@@ -222,9 +215,9 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
     
     return targetType.cast(target);
   }
-
+  
   @SuppressWarnings("unchecked")
-  private Object generateField(Field field) {
+  protected Object generateField(Field field) {
     Class<?> fieldType = field.getType();
     // generate field value using fieldGenerator
     AbstractGenerator generator = fieldGenerators.get(field);
@@ -232,7 +225,7 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
       Class<?> elemType = fieldType;
       // if field is a list, we should forward its parameter type to the generator
       if (List.class.equals(elemType)) {
-        elemType = getParameterType(field);
+        elemType = ReflectionUtils.getParameterType(field);
       }
       return generator.generate(elemType);
     } else if ((generator = BUILTIN_GENERATORS.get(fieldType)) != null) {
@@ -263,7 +256,7 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
   private Object generateList(Field field) {
     ObjectSupplier supplier;
     List list = new ArrayList<>();
-    Class<?> elemClass = getParameterType(field);
+    Class<?> elemClass = ReflectionUtils.getParameterType(field);
 
     if (BUILTIN_GENERATORS.containsKey(elemClass)) {
       supplier = (context, clazz) -> BUILTIN_GENERATORS.get(elemClass).generate(clazz);
@@ -279,18 +272,6 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
     }
 
     return list;
-  }
-
-  private Class<?> getParameterType(Field field) {
-    // determine element type
-    ParameterizedType parameterizedType = (ParameterizedType) field.getGenericType();
-    Type[] actualTypeArgs = parameterizedType.getActualTypeArguments();
-    if (actualTypeArgs.length == 0) {
-      throw new GeneratorException("Failed to determine parameterized type of list type field "
-            + field.getName() + " for class "
-            + field.getDeclaringClass().getSimpleName() + ".");
-    }
-    return (Class) actualTypeArgs[0];
   }
 
   /**
@@ -356,7 +337,7 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
         throws NoSuchFieldException {
       Objects.requireNonNull(fieldName);
       Objects.requireNonNull(fieldGenerator);
-      Field field = ins.resolveField(fieldName);
+      Field field = ReflectionUtils.getField(ins.targetType, fieldName);
       if (ins.fieldGenerators.containsKey(field)) {
         throw new InvalidParameterException("One generator has been set for target field: "
             + fieldName + ", you could only set a field generator for each"
