@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.luncert.objectmocker.exception.GeneratorException;
 
 import java.util.Set;
 
@@ -13,6 +14,7 @@ public class ObjectGeneratorProxyTest {
   public static class TestA {
     private String name;
     private int age;
+    private String address;
   }
   
   @Test
@@ -40,6 +42,7 @@ public class ObjectGeneratorProxyTest {
   public void testGenerate() throws Exception {
     ObjectGenerator client = ObjectGenerator.builder(TestA.class)
         .addIgnores("age")
+        .field("address", () -> "TEST_ADDRESS")
         .build();
   
     ObjectGenerator proxy = new ObjectGeneratorProxy(client);
@@ -50,5 +53,6 @@ public class ObjectGeneratorProxyTest {
     Assert.assertNotNull(obj);
     Assert.assertNull(obj.name);
     Assert.assertEquals(Integer.MAX_VALUE, obj.age);
+    Assert.assertEquals("TEST_ADDRESS", obj.address);
   }
 }

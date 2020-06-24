@@ -1,8 +1,5 @@
 package org.luncert.objectmocker.core;
 
-import org.luncert.objectmocker.exception.GeneratorException;
-
-import java.lang.reflect.TypeVariable;
 import java.util.Optional;
 
 public interface ObjectMockContext {
@@ -45,13 +42,7 @@ public interface ObjectMockContext {
    * @param generator any implementation of {@link AbstractGenerator}
    * @return generated object
    */
-  default <T> T generate(AbstractGenerator<T> generator) {
-    if (generator.isDynamicTypeGenerator()) {
-      throw new GeneratorException("generator must be not DynamicTypeGenerator");
-    }
-  
-    return generator.generate(null);
-  }
+  <T> T generate(AbstractGenerator<T> generator);
 
   /**
    * Generate enum, list, string and other basic type with responsive generator.
@@ -60,19 +51,8 @@ public interface ObjectMockContext {
    * @param elementType type of element
    * @return generated object
    */
-  default <T> T generate(AbstractGenerator<T> generator, Class<?> elementType) {
-    if (!generator.isDynamicTypeGenerator()) {
-      throw new GeneratorException("generator must be extended from DynamicTypeGenerator");
-    }
-    
-    if (elementType == null) {
-      throw new GeneratorException("element type is mandatory");
-    }
-    
-    generator.setObjectMockContext(this);
-    return generator.generate(elementType);
-  }
-
+  <T> T generate(AbstractGenerator<T> generator, Class<?> elementType);
+  
   /**
    * Get target class' ObjectGenerator.
    */

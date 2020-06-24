@@ -1,6 +1,5 @@
 package org.luncert.objectmocker.core;
 
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -8,7 +7,7 @@ import java.util.Optional;
 
 import org.luncert.objectmocker.exception.GeneratorException;
 
-class VirtualObjectMockContext implements ObjectMockContext {
+class VirtualObjectMockContext extends AbstractObjectMockContext {
 
   private ObjectMockContext parentContext;
 
@@ -42,23 +41,6 @@ class VirtualObjectMockContext implements ObjectMockContext {
     ObjectGenerator generator = generators.get(clazz);
     if (generator != null) {
       return clazz.cast(generator.generate(tmpIgnores));
-      //return parentContext.generate(clazz, basicGenerator -> {
-      //  ObjectGenerator generator = new ObjectGenerator(clazz,
-      //      mod.getIgnores(),
-      //      mod.getFieldGenerators());
-      //
-      //  basicGenerator.getIgnores().forEach(generator::addIgnores);
-      //  Map<Field, AbstractGenerator> fieldGenerators = generator.getFieldGenerators();
-      //  for (Map.Entry<Field, AbstractGenerator> entry :
-      //      basicGenerator.getFieldGenerators().entrySet()) {
-      //    if (!fieldGenerators.containsKey(entry.getKey())) {
-      //      fieldGenerators.put(entry.getKey(), entry.getValue());
-      //    }
-      //  }
-      //
-      //  generator.setObjectMockContext(this);
-      //  return generator;
-      //});
     } else {
       return parentContext.generate(clazz);
     }
@@ -66,14 +48,18 @@ class VirtualObjectMockContext implements ObjectMockContext {
 
   @Override
   public <T> T generate(Class<T> clazz, ObjectGeneratorExtender extender, String... tmpIgnores) {
-    ObjectGenerator generator = generators.get(clazz);
+    ObjectGenerator originalGenerator = generators.get(clazz);
     
-    if (generator != null) {
+    if (originalGenerator != null) {
+      ObjectGenerator generator;
+      
       try {
-        generator = extender.extendObjectGenerator(generator);
+        generator = extender.extendObjectGenerator(originalGenerator);
       } catch (Exception e) {
         throw new GeneratorException(e);
       }
+      
+      checkExtenderReturn(originalGenerator, generator);
       
       return clazz.cast(generator.generate(tmpIgnores));
     }

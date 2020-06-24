@@ -27,7 +27,7 @@ import org.luncert.objectmocker.exception.GeneratorException;
  * RealObjectMockContext.
  * @author Luncert
  */
-public final class RealObjectMockContext implements ObjectMockContext {
+public final class RealObjectMockContext extends AbstractObjectMockContext {
 
   // default Config of field level generators.
 
@@ -118,17 +118,22 @@ public final class RealObjectMockContext implements ObjectMockContext {
   @Override
   public <T> T generate(Class<T> clazz, ObjectGeneratorExtender extender,
                         String...tmpIgnores) {
-    ObjectGenerator generator = generators.get(clazz);
-    if (generator == null) {
-      throw new GeneratorException("No basic generator registered for class "
+    ObjectGenerator originalGenerator = generators.get(clazz);
+    if (originalGenerator == null) {
+      throw new GeneratorException("No generator registered for class "
           + clazz.getSimpleName());
     }
     
+    ObjectGenerator generator;
+    
     try {
-      generator = extender.extendObjectGenerator(generator);
+      generator = extender.extendObjectGenerator(originalGenerator);
     } catch (Exception e) {
       throw new GeneratorException(e);
     }
+    
+    checkExtenderReturn(originalGenerator, generator);
+    
     return clazz.cast(generator.generate(tmpIgnores));
   }
 

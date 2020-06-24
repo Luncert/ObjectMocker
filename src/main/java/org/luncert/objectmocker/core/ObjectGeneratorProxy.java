@@ -21,11 +21,6 @@ final class ObjectGeneratorProxy extends ObjectGenerator {
   
   ObjectGeneratorProxy(ObjectGenerator client) {
     super(client.getTargetType());
-    
-    if (client instanceof ObjectGeneratorProxy) {
-      throw new GeneratorException("target instance to be proxy must be not an instance of ObjectGeneratorProxy");
-    }
-    
     this.client = client;
   }
   
