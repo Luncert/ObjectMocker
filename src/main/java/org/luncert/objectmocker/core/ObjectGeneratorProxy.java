@@ -1,6 +1,5 @@
 package org.luncert.objectmocker.core;
 
-import org.luncert.objectmocker.exception.GeneratorException;
 import org.luncert.objectmocker.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
@@ -72,7 +71,7 @@ final class ObjectGeneratorProxy extends ObjectGenerator {
       Class<?> elemType = fieldType;
       // if field is a list, we should forward its parameter type to the generator
       if (List.class.equals(elemType)) {
-        elemType = ReflectionUtils.getParameterType(field);
+        elemType = ReflectionUtils.getParameterType(field).get(0);
       }
       return generator.generate(elemType);
     } else {

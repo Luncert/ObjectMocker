@@ -54,5 +54,12 @@ public class ObjectGeneratorProxyTest {
     Assert.assertNull(obj.name);
     Assert.assertEquals(Integer.MAX_VALUE, obj.age);
     Assert.assertEquals("TEST_ADDRESS", obj.address);
+    
+    ObjectGenerator proxy1 = new ObjectGeneratorProxy(proxy);
+    proxy1.addIgnores("age");
+    obj = (TestA) proxy1.generate();
+    Assert.assertNotNull(obj.name);
+    Assert.assertEquals(0, obj.age);
+    Assert.assertEquals("TEST_ADDRESS", obj.address);
   }
 }

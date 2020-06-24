@@ -35,27 +35,6 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
   
   private static final long serialVersionUID = 5287347012157068215L;
   
-  // TODO: as util
-  //private static final Map<Class, ValueParser> VALUE_PARSERS;
-  //
-  //static {
-  //  VALUE_PARSERS = ImmutableMap.<Class, ValueParser>builder()
-  //      .put(BigDecimal.class, BigDecimal::new)
-  //      .put(Boolean.class, Boolean::valueOf)
-  //      .put(boolean.class, Boolean::valueOf)
-  //      //.put(Date.class, null)
-  //      .put(Double.class, Double::valueOf)
-  //      .put(double.class, Double::valueOf)
-  //      .put(Integer.class, Integer::valueOf)
-  //      .put(int.class, Integer::valueOf)
-  //      .put(Long.class, Long::valueOf)
-  //      .put(long.class, Long::valueOf)
-  //      .put(String.class, v -> v)
-  //      .put(UUID.class, UUID::fromString)
-  //      //.put(ZonedDateTime.class, null)
-  //      .build();
-  //}
-  
   protected ObjectMockContext context;
   
   // target type to generate
@@ -209,6 +188,7 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
         }
         
         if (useConfiguredGeneratorForSuperClasses) {
+          // make sure context has been injected into this generator
           Optional<ObjectGenerator> optional = context.getObjectGenerator(objectClass);
           if (optional.isPresent()) {
             ObjectGenerator proxy = new ObjectGeneratorProxy(optional.get());
@@ -262,7 +242,7 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
       Class<?> elemType = fieldType;
       // if field is a list, we should forward its parameter type to the generator
       if (List.class.equals(elemType)) {
-        elemType = ReflectionUtils.getParameterType(field);
+        elemType = ReflectionUtils.getParameterType(field).get(0);
       }
       return generator.generate(elemType);
     } else if ((generator = BUILTIN_GENERATORS.get(fieldType)) != null) {
@@ -293,7 +273,7 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
   private Object generateList(Field field) {
     ObjectSupplier supplier;
     List list = new ArrayList<>();
-    Class<?> elemClass = ReflectionUtils.getParameterType(field);
+    Class<?> elemClass = ReflectionUtils.getParameterType(field).get(0);
     
     if (BUILTIN_GENERATORS.containsKey(elemClass)) {
       supplier = (context, clazz) -> BUILTIN_GENERATORS.get(elemClass).generate(clazz);

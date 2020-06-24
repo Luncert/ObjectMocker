@@ -80,6 +80,7 @@ class VirtualObjectMockContext extends AbstractObjectMockContext {
     if (optional.isPresent()) {
       generator = optional.get();
       generator = new ObjectGeneratorProxy(generator);
+      generator.setObjectMockContext(this);
       generators.put(targetClazz, generator);
       return Optional.of(generator);
     }
