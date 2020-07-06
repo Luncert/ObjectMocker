@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.luncert.objectmocker.core.ObjectGenerator;
+import org.luncert.objectmocker.core.ObjectGeneratorBuilder;
 import org.luncert.objectmocker.core.ObjectMockContext;
 
 import java.math.BigDecimal;
@@ -40,7 +41,7 @@ public class ObjectMockerTest {
   @Test
   public void basicSuccessCase() {
     ObjectMockContext context = ObjectMocker.context()
-          .register(ObjectGenerator.builder(TestClass.class).build())
+          .register(ObjectGeneratorBuilder.of(TestClass.class).build())
           .create();
     context.generate(TestClass.class);
   }
@@ -48,7 +49,7 @@ public class ObjectMockerTest {
   @Test
   public void extendRegisteredGenerator() throws NoSuchFieldException {
     ObjectMockContext context = ObjectMocker.context()
-        .register(ObjectGenerator.builder(TestClass.class)
+        .register(ObjectGeneratorBuilder.of(TestClass.class)
             .field("enumField", enumGenerator(new TestEnum[]{TestEnum.B, TestEnum.C}))
             .build())
         .create();
@@ -57,7 +58,7 @@ public class ObjectMockerTest {
     Assert.assertNotEquals(TestEnum.A, ins.getEnumField());
 
     ins = context.generate(TestClass.class, basicGenerator ->
-      ObjectGenerator.builder(TestClass.class)
+        ObjectGeneratorBuilder.of(TestClass.class)
           .field("enumField", enumGenerator(TestEnum.A))
           .extend(basicGenerator)
     );
@@ -67,7 +68,7 @@ public class ObjectMockerTest {
   @Test
   public void provideCustomizedGenerator() throws NoSuchFieldException {
     ObjectMockContext context = ObjectMocker.context()
-        .register(ObjectGenerator.builder(TestClass.class)
+        .register(ObjectGeneratorBuilder.of(TestClass.class)
             .field("stringUuidField", (ctx, clz) -> UUID.randomUUID().toString())
             .build())
         .create();
@@ -80,13 +81,13 @@ public class ObjectMockerTest {
   @Test
   public void createVirtualContext() throws Exception {
     ObjectMockContext context = ObjectMocker.context()
-        .register(ObjectGenerator.builder(TestClass.class).build())
+        .register(ObjectGeneratorBuilder.of(TestClass.class).build())
         .create();
 
     ObjectMockContext childCtx = context.createChildContext();
   
     // perform modification on child context
-    ObjectGenerator generator = childCtx.getObjectGenerator(TestClass.class)
+    ObjectGenerator generator = (ObjectGenerator) childCtx.getObjectGenerator(TestClass.class)
         .orElseThrow(NullPointerException::new);
     generator.addIgnores("shouldBeIgnored");
     generator.setGenerator("stringUuidField", (ctx, clz) -> "X801EF");

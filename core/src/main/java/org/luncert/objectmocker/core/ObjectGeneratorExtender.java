@@ -5,7 +5,7 @@ package org.luncert.objectmocker.core;
  * @author Luncert
  */
 @FunctionalInterface
-public interface ObjectGeneratorExtender {
+public interface ObjectGeneratorExtender<T> {
 
   /**
    * Extend basic ObjectGenerator.
@@ -13,5 +13,5 @@ public interface ObjectGeneratorExtender {
    * @return new ObjectGenerator
    * @throws Exception java.lang.Exception
    */
-  ObjectGenerator extendObjectGenerator(final ObjectGenerator basicGenerator) throws Exception;
+  ObjectGenerator<T> extendObjectGenerator(final ObjectGenerator<T> basicGenerator) throws Exception;
 }

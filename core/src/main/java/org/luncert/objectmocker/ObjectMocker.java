@@ -1,5 +1,6 @@
 package org.luncert.objectmocker;
 
+import org.luncert.objectmocker.core.AbstractObjectGenerator;
 import org.luncert.objectmocker.core.ObjectGenerator;
 import org.luncert.objectmocker.core.ObjectMockContext;
 import org.luncert.objectmocker.core.RealObjectMockContext;
@@ -27,7 +28,7 @@ public class ObjectMocker {
      * Register ObjectGenerator.
      * @param objectGenerator ObjectGenerator
      */
-    public ObjectMockContextBuilder register(ObjectGenerator objectGenerator) {
+    public ObjectMockContextBuilder register(AbstractObjectGenerator objectGenerator) {
       context.register(objectGenerator);
       return this;
     }

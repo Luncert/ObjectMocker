@@ -6,7 +6,6 @@ import static org.luncert.objectmocker.core.RealObjectMockContext.DEFAULT_LIST_S
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -18,7 +17,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,15 +29,11 @@ import org.luncert.objectmocker.util.ReflectionUtils;
  * @author Luncert
  */
 @Slf4j
-public class ObjectGenerator implements Serializable, IObjectMockContextAware {
+public class ObjectGenerator<T> extends AbstractObjectGenerator<T> implements Serializable {
   
   private static final long serialVersionUID = 5287347012157068215L;
   
   protected ObjectMockContext context;
-  
-  // target type to generate
-  @Getter
-  private final Class<?> targetType;
   
   // ignoring fields
   Set<String> ignores = new HashSet<>();
@@ -55,13 +49,13 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
   @Setter
   private boolean useConfiguredGeneratorForSuperClasses = true;
   
-  ObjectGenerator(Class<?> clazz) {
-    this.targetType = clazz;
+  ObjectGenerator(Class<T> clazz) {
+    super(clazz);
   }
   
-  ObjectGenerator(Class<?> clazz, Set<String> ignores,
+  ObjectGenerator(Class<T> clazz, Set<String> ignores,
                   Map<Field, AbstractGenerator> fieldGenerators) {
-    this.targetType = clazz;
+    super(clazz);
     this.ignores.addAll(ignores);
     this.fieldGenerators.putAll(fieldGenerators);
   }
@@ -141,7 +135,7 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
     Objects.requireNonNull(fieldName);
     Objects.requireNonNull(fieldGenerator);
     fieldGenerator.setObjectMockContext(this.context);
-    fieldGenerators.put(ReflectionUtils.getField(targetType, fieldName),
+    fieldGenerators.put(ReflectionUtils.getField(getTargetType(), fieldName),
         fieldGenerator);
   }
   
@@ -157,12 +151,12 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
    * @return target object
    */
   @SuppressWarnings("unchecked")
-  Object generate(String...tmpIgnores) {
+  public T generate(String...tmpIgnores) {
+    final Class<T> targetType = getTargetType();
     String className = targetType.getSimpleName();
     
     // try to create new instance for target class
-    
-    Object target;
+    T target;
     try {
       target = targetType.getConstructor().newInstance();
     } catch (Exception e) {
@@ -177,9 +171,10 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
   
     generateInstance(targetType, target, tmpIgnoreSet);
   
+    // scan super classes
     if (scanSuperClasses) {
       // loop to scan all fields of target type, including its super classes.
-      Class<?> objectClass = targetType;
+      Class objectClass = targetType;
       while (true) {
         // turn to parent class
         objectClass = objectClass.getSuperclass();
@@ -189,7 +184,7 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
         
         if (useConfiguredGeneratorForSuperClasses) {
           // make sure context has been injected into this generator
-          Optional<ObjectGenerator> optional = context.getObjectGenerator(objectClass);
+          Optional<ObjectGenerator<?>> optional = context.getObjectGenerator(objectClass);
           if (optional.isPresent()) {
             ObjectGenerator proxy = new ObjectGeneratorProxy(optional.get());
             // generator configuration of base class precede over its super classes'.
@@ -204,7 +199,7 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
       }
     }
     
-    return targetType.cast(target);
+    return target;
   }
   
   private void generateInstance(Class<?> type, Object instance, Set<String> tmpIgnoreSet) {
@@ -289,122 +284,5 @@ public class ObjectGenerator implements Serializable, IObjectMockContextAware {
     }
     
     return list;
-  }
-  
-  /**
-   * Get ObjectGeneratorBuilder.
-   * @param targetType target class
-   * @return ObjectGeneratorBuilder
-   */
-  public static ObjectGeneratorBuilder builder(Class<?> targetType) {
-    return new ObjectGeneratorBuilder(targetType);
-  }
-  
-  /**
-   * Fast build ObjectGenerator with user provided configuration.
-   */
-  public static class ObjectGeneratorBuilder {
-    private ObjectGenerator ins;
-    
-    private ObjectGeneratorBuilder(Class<?> clazz) {
-      ins = new ObjectGenerator(clazz);
-    }
-    
-    public ObjectGeneratorBuilder addIgnores(String...ignores) {
-      ins.ignores.addAll(Arrays.asList(ignores));
-      return this;
-    }
-    
-    /**
-     * If false, then generator will ignore all fields the target type extended from its super classes
-     * @param scanSuperClasses boolean
-     */
-    public ObjectGeneratorBuilder scanSuperClasses(boolean scanSuperClasses) {
-      ins.scanSuperClasses = scanSuperClasses;
-      return this;
-    }
-    
-    /**
-     * If true, target type's super classes must have a relevant generator registered to mock context
-     * @param useConfiguredGeneratorForSuperClasses boolean
-     */
-    public ObjectGeneratorBuilder useConfiguredGeneratorForSuperClasses(boolean useConfiguredGeneratorForSuperClasses) {
-      ins.useConfiguredGeneratorForSuperClasses = useConfiguredGeneratorForSuperClasses;
-      return this;
-    }
-    
-    /**
-     * Provide a special value for target field.
-     * @param fieldName field name of target class
-     * @param value Lambda expression, implementation of {@link ValueSupplier}
-     * @return ObjectGeneratorBuilder
-     * @throws Exception failed to set generator
-     */
-    @SuppressWarnings("unchecked")
-    public ObjectGeneratorBuilder field(String fieldName, ValueSupplier value)
-        throws Exception {
-      Object v = value.get();
-      return field(fieldName, new LambdaBasedGenerator((clx, clz) -> v));
-    }
-    
-    /**
-     * Provide a function-interface generator for specified field.
-     * @param fieldName field name of target class
-     * @param supplier Lambda expression, implementation of {@link ObjectSupplier}
-     * @return ObjectGeneratorBuilder
-     * @throws NoSuchFieldException throw exception if couldn't find target field
-     */
-    @SuppressWarnings("unchecked")
-    public ObjectGeneratorBuilder field(String fieldName, ObjectSupplier supplier)
-        throws NoSuchFieldException {
-      return field(fieldName, new LambdaBasedGenerator(supplier));
-    }
-    
-    /**
-     * Provide a generator for specified field.
-     * Only available when builds ObjectGenerator.
-     * @param fieldName field name of target class
-     * @param fieldGenerator customized generator, must be implementation
-     *                      of {@link AbstractGenerator}
-     * @throws NoSuchFieldException throw exception if couldn't find target field
-     */
-    public ObjectGeneratorBuilder field(String fieldName, AbstractGenerator fieldGenerator)
-        throws NoSuchFieldException {
-      Objects.requireNonNull(fieldName);
-      Objects.requireNonNull(fieldGenerator);
-      Field field = ReflectionUtils.getField(ins.targetType, fieldName);
-      if (ins.fieldGenerators.containsKey(field)) {
-        throw new InvalidParameterException("One generator has been set for target field: "
-            + fieldName + ", you could only set a field generator for each"
-            + " field once when build ObjectGenerator.");
-      }
-      ins.fieldGenerators.put(field, fieldGenerator);
-      return this;
-    }
-    
-    /**
-     * Extend a basic ObjectGenerator, including ObjectMockContext,
-     * ignores and part of field generators.
-     * @param basicGenerator basic ObjectGenerator
-     * @return ObjectGenerator
-     */
-    public ObjectGenerator extend(final ObjectGenerator basicGenerator) {
-      if (!ins.targetType.equals(basicGenerator.targetType)) {
-        throw new GeneratorException("Extended ObjectGenerator should"
-            + " has the same target class as the basic ObjectGenerator.");
-      }
-      ins.context = basicGenerator.context;
-      ins.ignores.addAll(basicGenerator.ignores);
-      for (Map.Entry<Field, AbstractGenerator> entry : basicGenerator.fieldGenerators.entrySet()) {
-        if (!ins.fieldGenerators.containsKey(entry.getKey())) {
-          ins.fieldGenerators.put(entry.getKey(), entry.getValue());
-        }
-      }
-      return ins;
-    }
-    
-    public ObjectGenerator build() {
-      return ins;
-    }
   }
 }

@@ -76,10 +76,10 @@ public final class RealObjectMockContext extends AbstractObjectMockContext {
         .build();
   }
 
-  private final Map<Class, ObjectGenerator> generators = new HashMap<>();
+  private final Map<Class, AbstractObjectGenerator> generators = new HashMap<>();
 
   @Override
-  public void register(ObjectGenerator objectGenerator) {
+  public void register(AbstractObjectGenerator objectGenerator) {
     Objects.requireNonNull(objectGenerator);
     
     Class<?> targetClazz = objectGenerator.getTargetType();
@@ -100,7 +100,7 @@ public final class RealObjectMockContext extends AbstractObjectMockContext {
   @Override
   public <T> T generate(Class<T> clazz, String... tmpIgnores) {
     Object target;
-    ObjectGenerator generator = generators.get(clazz);
+    AbstractObjectGenerator generator = generators.get(clazz);
     if (generator != null) {
       target = generator.generate(tmpIgnores);
     } else {
@@ -108,7 +108,7 @@ public final class RealObjectMockContext extends AbstractObjectMockContext {
       if (builtinGenerator != null) {
         target = builtinGenerator.generate(clazz);
       } else {
-        throw new GeneratorException("No generator registered for class %s.",
+        throw new GeneratorException("No generator registered for class %s",
             clazz.getSimpleName());
       }
     }
@@ -116,29 +116,37 @@ public final class RealObjectMockContext extends AbstractObjectMockContext {
   }
 
   @Override
-  public <T> T generate(Class<T> clazz, ObjectGeneratorExtender extender,
+  @SuppressWarnings("unchecked")
+  public <T> T generate(Class<T> clazz, ObjectGeneratorExtender<T> extender,
                         String...tmpIgnores) {
-    ObjectGenerator originalGenerator = generators.get(clazz);
+    AbstractObjectGenerator<T> originalGenerator = generators.get(clazz);
+    
     if (originalGenerator == null) {
       throw new GeneratorException("No generator registered for class "
           + clazz.getSimpleName());
     }
     
+    if (!(originalGenerator instanceof ObjectGenerator)) {
+      throw new GeneratorException("Original Generator isn't extendable, " +
+          "only instance of ObjectGenerator could be extended");
+    }
+    
     ObjectGenerator generator;
     
     try {
-      generator = extender.extendObjectGenerator(originalGenerator);
+      generator = extender.extendObjectGenerator((ObjectGenerator<T>) originalGenerator);
     } catch (Exception e) {
       throw new GeneratorException(e);
     }
     
-    checkExtenderReturn(originalGenerator, generator);
+    checkExtenderReturn((ObjectGenerator<T>) originalGenerator, generator);
     
     return clazz.cast(generator.generate(tmpIgnores));
   }
 
   @Override
-  public Optional<ObjectGenerator> getObjectGenerator(Class<?> targetClazz) {
+  @SuppressWarnings("unchecked")
+  public <T> Optional<AbstractObjectGenerator<T>> getObjectGenerator(Class<T> targetClazz) {
     Objects.requireNonNull(targetClazz, "null-pointer parameter");
     return Optional.ofNullable(generators.get(targetClazz));
   }

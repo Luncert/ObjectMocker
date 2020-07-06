@@ -12,13 +12,13 @@ import java.util.Set;
  * <li>add/remove ignoring shouldn't affect client generator</li>
  * <li>remove ignoring should do work</li>
  */
-final class ObjectGeneratorProxy extends ObjectGenerator {
+final class ObjectGeneratorProxy<T> extends ObjectGenerator<T> {
   
-  private ObjectGenerator client;
+  private ObjectGenerator<T> client;
   
   private Set<String> includes = new HashSet<>();
   
-  ObjectGeneratorProxy(ObjectGenerator client) {
+  ObjectGeneratorProxy(ObjectGenerator<T> client) {
     super(client.getTargetType());
     this.client = client;
   }

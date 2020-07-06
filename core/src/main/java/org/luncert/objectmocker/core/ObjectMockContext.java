@@ -7,9 +7,9 @@ public interface ObjectMockContext {
   /**
    * Register ObjectGenerator.
    * @param objectGenerator build with
-   * {@link org.luncert.objectmocker.core.ObjectGenerator.ObjectGeneratorBuilder}
+   * {@link ObjectGeneratorBuilder}
    */
-  void register(ObjectGenerator objectGenerator);
+  void register(AbstractObjectGenerator objectGenerator);
 
   /**
    * Check if any generator has been registered for target class.
@@ -33,7 +33,7 @@ public interface ObjectMockContext {
    * @param tmpIgnores ignore specified fields
    * @return generated object
    */
-  <T> T generate(Class<T> clazz, ObjectGeneratorExtender extender,
+  <T> T generate(Class<T> clazz, ObjectGeneratorExtender<T> extender,
                         String...tmpIgnores);
   
   /**
@@ -56,7 +56,7 @@ public interface ObjectMockContext {
   /**
    * Get target class' ObjectGenerator.
    */
-  Optional<ObjectGenerator> getObjectGenerator(Class<?> targetClazz);
+  <T> Optional<AbstractObjectGenerator<T>> getObjectGenerator(Class<T> targetClazz);
 
   /**
    * Create and return a child context,

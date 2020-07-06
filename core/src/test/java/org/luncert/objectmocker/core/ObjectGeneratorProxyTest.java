@@ -4,7 +4,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.luncert.objectmocker.exception.GeneratorException;
 
 import java.util.Set;
 
@@ -19,11 +18,11 @@ public class ObjectGeneratorProxyTest {
   
   @Test
   public void testModifyIgnores() {
-    ObjectGenerator client = ObjectGenerator.builder(TestA.class)
+    ObjectGenerator<TestA> client = ObjectGeneratorBuilder.of(TestA.class)
         .addIgnores("age")
         .build();
     
-    ObjectGenerator proxy = new ObjectGeneratorProxy(client);
+    ObjectGenerator<TestA> proxy = new ObjectGeneratorProxy<>(client);
     Assert.assertTrue(proxy.hasIgnore("age"));
     
     proxy.addIgnores("name");
@@ -40,24 +39,24 @@ public class ObjectGeneratorProxyTest {
   
   @Test
   public void testGenerate() throws Exception {
-    ObjectGenerator client = ObjectGenerator.builder(TestA.class)
+    ObjectGenerator<TestA> client = ObjectGeneratorBuilder.of(TestA.class)
         .addIgnores("age")
         .field("address", () -> "TEST_ADDRESS")
         .build();
   
-    ObjectGenerator proxy = new ObjectGeneratorProxy(client);
+    ObjectGenerator<TestA> proxy = new ObjectGeneratorProxy<>(client);
     proxy.setGenerator("age", () -> Integer.MAX_VALUE);
     proxy.removeIgnores("age");
     
-    TestA obj = (TestA) proxy.generate("name");
+    TestA obj = proxy.generate("name");
     Assert.assertNotNull(obj);
     Assert.assertNull(obj.name);
     Assert.assertEquals(Integer.MAX_VALUE, obj.age);
     Assert.assertEquals("TEST_ADDRESS", obj.address);
     
-    ObjectGenerator proxy1 = new ObjectGeneratorProxy(proxy);
+    ObjectGenerator<TestA> proxy1 = new ObjectGeneratorProxy<>(proxy);
     proxy1.addIgnores("age");
-    obj = (TestA) proxy1.generate();
+    obj = proxy1.generate();
     Assert.assertNotNull(obj.name);
     Assert.assertEquals(0, obj.age);
     Assert.assertEquals("TEST_ADDRESS", obj.address);

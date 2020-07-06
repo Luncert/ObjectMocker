@@ -21,12 +21,12 @@ public class VirtualObjectMockContextTest {
   @Test
   public void test() {
     ObjectMockContext rootCtx = ObjectMocker.context()
-        .register(ObjectGenerator.builder(TestA.class)
+        .register(ObjectGeneratorBuilder.of(TestA.class)
             .build())
         .create();
     
     ObjectMockContext childCtx = rootCtx.createChildContext();
-    childCtx.register(ObjectGenerator.builder(TestB.class)
+    childCtx.register(ObjectGeneratorBuilder.of(TestB.class)
         .build());
     
     TestB testB = childCtx.generate(TestB.class);

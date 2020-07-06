@@ -5,7 +5,7 @@ import org.luncert.objectmocker.exception.GeneratorException;
 public abstract class AbstractObjectMockContext implements ObjectMockContext {
   
   public <T> T generate(AbstractGenerator<T> generator) {
-    if (generator.isDynamicTypeGenerator()) {
+    if (generator instanceof DynamicTypeGenerator) {
       throw new GeneratorException("generator must be not DynamicTypeGenerator");
     }
     
@@ -13,7 +13,7 @@ public abstract class AbstractObjectMockContext implements ObjectMockContext {
   }
   
   public <T> T generate(AbstractGenerator<T> generator, Class<?> elementType) {
-    if (!generator.isDynamicTypeGenerator()) {
+    if (!(generator instanceof DynamicTypeGenerator)) {
       throw new GeneratorException("generator must be extended from DynamicTypeGenerator");
     }
     
